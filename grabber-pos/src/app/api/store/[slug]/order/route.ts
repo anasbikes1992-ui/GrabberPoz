@@ -2,18 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { placeStorefrontOrder } from "@/lib/server/storefront-repo";
 
-/**
- * Public order placement for the storefront.
- *
- * This exists so the shop page never has to call `/api/sales`, which requires a
- * staff session — an anonymous shopper posting there gets a 401. Opening
- * `/api/sales` to the public instead would let anyone create sales and move
- * inventory, so orders come through here and are validated independently.
- *
- * Only product ids and quantities are accepted. Prices, discounts, stock and
- * totals are resolved inside `storefront_create_order`, so nothing a shopper can
- * edit in the browser affects what they are charged.
- */
 const orderSchema = z.object({
   customerName: z.string().trim().min(2, "Name is required").max(120),
   customerMobile: z.string().trim().min(7, "A contact number is required").max(40),
@@ -30,10 +18,6 @@ const orderSchema = z.object({
     .max(100, "Too many items in one order"),
 });
 
-/**
- * Small in-memory throttle. Enough to blunt casual abuse of a public write
- * endpoint; a shared store would be needed to make it hold across instances.
- */
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 8;
 const hits = new Map<string, { count: number; resetAt: number }>();
@@ -90,16 +74,17 @@ export async function POST(
     );
     return NextResponse.json({ success: true, data: order, error: null });
   } catch (error) {
-    // Stock, availability and storefront errors are all client-correctable.
     const message = error instanceof Error ? error.message : "Order could not be placed";
     return fail(cleanMessage(message), 422);
   }
 }
 
-/** Strip the RPC's `CODE: ` prefixes so shoppers see plain language. */
 function cleanMessage(message: string): string {
+  if (message.includes("invalid input syntax for type uuid") || message.includes("Invalid UUID")) {
+    return "Selected product is currently unavailable for online order. Please try another product.";
+  }
   const known = /^(PRODUCT|STOCK|ORDER|STOREFRONT|QTY|CASH|SALE|BRANCH|AUTH):\s*/;
-  if (!known.test(message)) return "Order could not be placed. Please try again.";
+  if (!known.test(message)) return message.length < 80 ? message : "Order could not be placed. Please try again.";
   const text = message.replace(known, "");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }

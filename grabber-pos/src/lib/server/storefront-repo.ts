@@ -112,8 +112,8 @@ export async function getStorefrontProduct(
 ): Promise<StoreProduct | null> {
   const fallbackProduct = async (): Promise<StoreProduct | null> => {
     const repo = await getRepository();
-    const pPage = await repo.queryProducts({ pageSize: 100 });
-    const match = pPage.items.find((p) => slugify(p.name) === productSlug);
+    const pPage = await repo.queryProducts({ pageSize: 500 });
+    const match = pPage.items.find((p) => slugify(p.name) === productSlug || p.id === productSlug);
     if (!match) return null;
     return {
       id: match.id,
@@ -171,52 +171,37 @@ export async function placeStorefrontOrder(
   key: StorefrontKey,
   input: StoreOrderInput,
 ): Promise<{ id: string; receiptNo: string; total: number }> {
-  if (!isSupabaseEnabled) {
-    const repo = await getRepository();
-    const sale = await repo.createSale({
-      paymentMethod: "cash",
-      lines: input.lines.map((l) => ({ productId: l.productId, quantity: l.quantity, discount: 0 })),
-      customerName: input.customerName,
-      customerMobile: input.customerMobile,
-    });
-    return { id: sale.id, receiptNo: sale.id, total: sale.total };
-  }
+  const repo = await getRepository();
+  const productsPage = await repo.queryProducts({ pageSize: 500 });
+
+  const resolvedLines = input.lines.map((line) => {
+    const matched = productsPage.items.find(
+      (p) => p.id === line.productId || p.barcodes?.includes(line.productId) || slugify(p.name) === line.productId
+    );
+    return {
+      productId: matched?.id ?? line.productId,
+      quantity: Math.max(1, Number(line.quantity) || 1),
+      discount: 0,
+    };
+  });
 
   try {
-    const { data, error } = await anonClient().rpc("storefront_create_order", {
-      p_host: key.host,
-      p_slug: key.slug,
-      p_payload: {
-        customerName: input.customerName,
-        customerMobile: input.customerMobile,
-        clientUuid: input.clientUuid,
-        lines: input.lines,
-      },
-    });
-    if (error || !data) {
-      const repo = await getRepository();
-      const sale = await repo.createSale({
-        paymentMethod: "cash",
-        lines: input.lines.map((l) => ({ productId: l.productId, quantity: l.quantity, discount: 0 })),
-        customerName: input.customerName,
-        customerMobile: input.customerMobile,
-      });
-      return { id: sale.id, receiptNo: sale.id, total: sale.total };
-    }
-    const sale = data as { id: string; receipt_no?: string; total?: number };
-    return {
-      id: sale.id,
-      receiptNo: sale.receipt_no ?? sale.id,
-      total: Number(sale.total ?? 0),
-    };
-  } catch {
-    const repo = await getRepository();
     const sale = await repo.createSale({
       paymentMethod: "cash",
-      lines: input.lines.map((l) => ({ productId: l.productId, quantity: l.quantity, discount: 0 })),
+      lines: resolvedLines,
       customerName: input.customerName,
       customerMobile: input.customerMobile,
+      clientUuid: input.clientUuid,
     });
-    return { id: sale.id, receiptNo: sale.id, total: sale.total };
+
+    const s = sale as unknown as Record<string, unknown>;
+    return {
+      id: sale.id,
+      receiptNo: (s.receiptNo as string) || (s.receipt_no as string) || sale.id,
+      total: Number(sale.total || 0),
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Order placement failed";
+    throw new Error(message);
   }
 }
