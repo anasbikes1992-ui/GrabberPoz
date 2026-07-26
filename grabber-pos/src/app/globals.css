@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --surface-0: oklch(16% 0.012 260);
+  --surface-1: oklch(20% 0.014 260);
+  --surface-2: oklch(24% 0.016 260);
+  --surface-3: oklch(29% 0.018 260);
+  --line: oklch(32% 0.02 260);
+  --text-strong: oklch(96% 0.005 260);
+  --text: oklch(82% 0.01 260);
+  --text-dim: oklch(62% 0.012 260);
+  --accent: oklch(76% 0.16 160);
+  --accent-strong: oklch(66% 0.17 160);
+  --accent-ink: oklch(20% 0.05 160);
+  --warn: oklch(80% 0.14 85);
+  --danger: oklch(66% 0.2 25);
+  --info: oklch(72% 0.12 250);
+}
+
+@theme inline {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-text-strong: var(--text-strong);
+  --color-text-body: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--surface-0);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+  .label {
+    break-inside: avoid;
+  }
+}
