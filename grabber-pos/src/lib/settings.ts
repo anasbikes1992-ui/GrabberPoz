@@ -55,6 +55,18 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
       { key: "pointsValue", label: "1 point = (LKR)", type: "number" },
     ],
   },
+  {
+    label: "Website Storefront & Marketing (SEO / Ads)",
+    fields: [
+      { key: "storeEnabled", label: "Enable Public Website", type: "select", options: ["Yes", "No"] },
+      { key: "storeSlug", label: "Website URL Slug (e.g. apex-retail)", type: "text" },
+      { key: "storeSlogan", label: "Store Slogan / Subtitle", type: "text", full: true },
+      { key: "storeBanner", label: "Hero Banner Image URL", type: "text", full: true },
+      { key: "googleAdsId", label: "Google Ads / GTAG ID (AW-xxx)", type: "text" },
+      { key: "metaPixelId", label: "Meta (Facebook) Pixel ID", type: "text" },
+      { key: "socialWhatsapp", label: "WhatsApp Order Contact Number", type: "text" },
+    ],
+  },
 ];
 
 export const settingsSchema = z.object({
@@ -75,6 +87,13 @@ export const settingsSchema = z.object({
   whatsappCountryCode: z.string().max(5).default("94"),
   pointsPerCurrency: z.coerce.number().min(1).default(100),
   pointsValue: z.coerce.number().min(0).default(1),
+  storeEnabled: z.enum(["Yes", "No"]).default("Yes"),
+  storeSlug: z.string().max(80).default("main-store"),
+  storeSlogan: z.string().max(300).default("Your Quality Everyday Store — Shop Online & Fast Delivery"),
+  storeBanner: z.string().max(500).default(""),
+  googleAdsId: z.string().max(60).default(""),
+  metaPixelId: z.string().max(60).default(""),
+  socialWhatsapp: z.string().max(30).default(""),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

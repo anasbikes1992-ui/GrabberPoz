@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 
 const DEMO_COOKIE = "pos_session";
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/health"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/auth/login",
+  "/api/health",
+  "/store",
+  "/api/store",
+  "/sitemap.xml",
+  "/robots.txt",
+];
 
 /**
  * Optimistic auth guard (per Next.js guidance, real authorization lives in the

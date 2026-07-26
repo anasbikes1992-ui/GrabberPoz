@@ -33,14 +33,14 @@ create policy org_self on organizations
 create policy branch_read on branches
   for select using (org_id = current_org_id());
 create policy branch_write on branches
-  for all using (org_id = current_org_id() and current_role() in ('owner','manager'))
+  for all using (org_id = current_org_id() and current_user_role() in ('owner','manager'))
   with check (org_id = current_org_id());
 
 -- Profiles: read peers in org; only owners manage them.
 create policy profile_read on profiles
   for select using (org_id = current_org_id());
 create policy profile_write on profiles
-  for all using (org_id = current_org_id() and current_role() = 'owner')
+  for all using (org_id = current_org_id() and current_user_role() = 'owner')
   with check (org_id = current_org_id());
 
 create policy branch_members_read on branch_members
@@ -55,7 +55,7 @@ create policy categories_rw on categories
 create policy products_read on products
   for select using (org_id = current_org_id());
 create policy products_write on products
-  for all using (org_id = current_org_id() and current_role() in ('owner','manager'))
+  for all using (org_id = current_org_id() and current_user_role() in ('owner','manager'))
   with check (org_id = current_org_id());
 create policy barcodes_rw on product_barcodes
   for all using (org_id = current_org_id()) with check (org_id = current_org_id());
@@ -69,7 +69,7 @@ create policy movements_read on stock_movements
 
 -- Purchases.
 create policy purchases_rw on purchases
-  for all using (org_id = current_org_id() and current_role() in ('owner','manager'))
+  for all using (org_id = current_org_id() and current_user_role() in ('owner','manager'))
   with check (org_id = current_org_id());
 create policy purchase_lines_rw on purchase_lines
   for all using (exists (

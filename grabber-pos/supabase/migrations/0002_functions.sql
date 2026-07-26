@@ -6,7 +6,7 @@ language sql stable security definer set search_path = public as $$
   select org_id from profiles where id = auth.uid();
 $$;
 
-create or replace function current_role() returns user_role
+create or replace function current_user_role() returns user_role
 language sql stable security definer set search_path = public as $$
   select role from profiles where id = auth.uid();
 $$;
@@ -258,7 +258,7 @@ declare
   v_org uuid := current_org_id();
   v_bal numeric;
 begin
-  if current_role() = 'cashier' then
+  if current_user_role() = 'cashier' then
     raise exception 'ROLE: cashiers cannot adjust stock';
   end if;
   insert into branch_stock (branch_id, product_id, quantity)

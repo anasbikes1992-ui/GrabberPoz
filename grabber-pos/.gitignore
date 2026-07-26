@@ -42,3 +42,8 @@ next-env.d.ts
 
 # local runtime data (sales store)
 /data/
+
+.vercel
+
+# supabase CLI scratch state (project ref, versions)
+supabase/.temp/
