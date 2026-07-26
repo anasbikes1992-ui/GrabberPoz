@@ -45,8 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function TenantStorePage({ params }: Props) {
-  const { slug } = await params;
+export default async function TenantStorePage({
+  params,
+}: {
+  params: Promise<{ slug: string }> | any;
+}) {
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug || "main-store";
   const repo = await getRepository();
   const page = await repo.queryProducts({ pageSize: 100 });
   const settings = await readSettings();
