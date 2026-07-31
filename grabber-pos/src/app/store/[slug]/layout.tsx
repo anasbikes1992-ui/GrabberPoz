@@ -36,6 +36,9 @@ export default async function StoreLayout({
       />
 
       <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-800 bg-slate-900/90 px-4 py-4 backdrop-blur-md lg:px-8">
           <Link href={`/store/${slug}`} className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-sky-500 text-xl font-bold text-white shadow-lg shadow-emerald-500/20">
@@ -48,10 +51,14 @@ export default async function StoreLayout({
               <span className="block text-xs text-slate-400">Official online store</span>
             </span>
           </Link>
-          <CartButton />
+          <nav aria-label="Store">
+            <CartButton />
+          </nav>
         </header>
 
-        {children}
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
 
         <footer className="mt-16 border-t border-slate-800 px-4 py-10 text-center text-xs text-slate-500 lg:px-8">
           <p>

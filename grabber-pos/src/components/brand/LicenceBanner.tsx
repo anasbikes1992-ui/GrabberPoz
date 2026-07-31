@@ -13,7 +13,7 @@ export function LicenceBanner() {
 
   return (
     <div
-      role="status"
+      role="status" aria-live="polite"
       className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-danger/30 bg-danger/10 px-5 py-2 text-center text-sm text-danger"
     >
       <span>

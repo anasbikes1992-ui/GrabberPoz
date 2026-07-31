@@ -176,9 +176,9 @@ export function BillPanel() {
         >
           ✓
         </motion.div>
-        <h2 className="mt-4 text-lg font-semibold text-text-strong">
+        <h1 className="mt-4 text-lg font-semibold text-text-strong">
           {done.id}
-        </h2>
+        </h1>
         <p className="mt-1 text-3xl font-bold text-accent">
           {formatMoney(done.total)}
         </p>

@@ -257,9 +257,9 @@ function CartDrawer({
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm">
       <div className="flex h-full w-full max-w-md flex-col border-l border-slate-800 bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-          <h2 className="font-bold text-slate-100">
+          <h1 className="font-bold text-slate-100">
             {step === "done" ? "Order placed" : "Your order"}
-          </h2>
+          </h1>
           <button
             onClick={onClose}
             aria-label="Close cart"

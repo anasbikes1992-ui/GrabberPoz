@@ -62,7 +62,7 @@ export default function InventoryPage() {
         transition={{ duration: 0.4 }}
         className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface-1"
       >
-        <table className="w-full min-w-175 text-sm">
+        <table className="w-full min-w-175 text-sm" aria-label="Inventory stock levels">
           <thead>
             <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-text-dim">
               <th className="px-5 py-3.5 font-medium">Product</th>

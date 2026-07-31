@@ -84,7 +84,7 @@ export function CollectionManager({ name }: { name: string }) {
         </p>
       ) : (
         <div className="mt-5 overflow-hidden rounded-xl border border-line bg-surface-1">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Collection records">
             <thead>
               <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-text-dim">
                 {listFields.map((f) => (
@@ -219,9 +219,9 @@ function CollectionForm({
             transition={{ type: "spring", stiffness: 360, damping: 30 }}
             className="my-4 w-full max-w-lg rounded-2xl border border-line bg-surface-1 p-6 shadow-2xl"
           >
-            <h2 className="text-lg font-semibold text-text-strong">
+            <h1 className="text-lg font-semibold text-text-strong">
               {row ? `Edit ${config.singular.toLowerCase()}` : `New ${config.singular.toLowerCase()}`}
-            </h2>
+            </h1>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               {config.fields.map((f) => (

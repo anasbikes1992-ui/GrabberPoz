@@ -156,9 +156,9 @@ export function StockOperation({ type }: { type: OpType }) {
       />
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Input label={cfg.partyLabel} value={party} onChange={setParty} />
-        <Input label="Reference" value={reference} onChange={setReference} />
-        <Input label="Note" value={note} onChange={setNote} />
+        <LabeledField label={cfg.partyLabel} value={party} onChange={setParty} />
+        <LabeledField label="Reference" value={reference} onChange={setReference} />
+        <LabeledField label="Note" value={note} onChange={setNote} />
       </div>
 
       <ProductPicker onPick={addProduct} />
@@ -169,7 +169,7 @@ export function StockOperation({ type }: { type: OpType }) {
             Search and add products above.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Stock operation line items">
             <thead>
               <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-text-dim">
                 <th className="px-4 py-2.5 font-medium">Product</th>
@@ -291,7 +291,7 @@ export function StockOperation({ type }: { type: OpType }) {
   );
 }
 
-function Input({
+function LabeledField({
   label,
   value,
   onChange,
@@ -300,10 +300,13 @@ function Input({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const id = `stock-field-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
-    <label className="text-sm">
+    <label className="text-sm" htmlFor={id}>
       <span className="mb-1 block text-text-dim">{label}</span>
       <input
+        id={id}
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"

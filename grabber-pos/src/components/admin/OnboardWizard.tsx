@@ -238,23 +238,26 @@ export function OnboardWizard({ onDone }: { onDone: () => void }) {
                 <Summary label="Expiry" value={draft.expiry || "Perpetual"} />
               </dl>
 
-              <label className="flex items-start gap-2.5 rounded-xl border border-line p-3">
-                <input
-                  type="checkbox"
-                  checked={draft.applyBranding}
-                  onChange={(e) => set("applyBranding", e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
-                />
-                <span className="text-sm">
-                  <span className="font-medium text-text-strong">
-                    White-label this workspace for them
+              <fieldset className="rounded-xl border border-line p-3">
+                <legend className="sr-only">White-label options</legend>
+                <label className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={draft.applyBranding}
+                    onChange={(e) => set("applyBranding", e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+                  />
+                  <span className="text-sm">
+                    <span className="font-medium text-text-strong">
+                      White-label this workspace for them
+                    </span>
+                    <span className="mt-0.5 block text-xs text-text-dim">
+                      Applies the name, logo, accent and licence to this instance.
+                      Use for a dedicated per-client deployment.
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-xs text-text-dim">
-                    Applies the name, logo, accent and licence to this instance.
-                    Use for a dedicated per-client deployment.
-                  </span>
-                </span>
-              </label>
+                </label>
+              </fieldset>
 
               {draft.applyBranding && (
                 <div className="grid gap-3 sm:grid-cols-2">

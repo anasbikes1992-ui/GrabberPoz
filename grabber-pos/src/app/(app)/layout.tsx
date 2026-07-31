@@ -11,9 +11,14 @@ export default function AppLayout({
   return (
     <BrandProvider>
       <div className="flex min-h-screen flex-col">
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
         <TopBar />
         <LicenceBanner />
-        <PageTransition>{children}</PageTransition>
+        <main id="main" className="flex-1" tabIndex={-1}>
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </BrandProvider>
   );

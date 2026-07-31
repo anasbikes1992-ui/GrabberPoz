@@ -59,6 +59,9 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-stretch">
+        <a href="#login-form" className="skip-link">
+          Skip to main content
+        </a>
       {/* Brand panel */}
       <section className="relative hidden flex-1 flex-col justify-center overflow-hidden px-16 lg:flex">
         <motion.div
@@ -67,14 +70,15 @@ export default function LoginPage() {
           animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="text-6xl font-semibold tracking-tight text-text-strong"
         >
-          GRABBER <span className="text-accent">POS</span> Studio
-        </motion.h1>
+          <h1 className="text-6xl font-semibold tracking-tight text-text-strong">
+            GRABBER <span className="text-accent">POS</span> Studio
+          </h1>
+        </motion.div>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,6 +109,7 @@ export default function LoginPage() {
       {/* Form panel */}
       <section className="flex flex-1 items-center justify-center px-6">
         <motion.form
+          id="login-form"
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 32, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -118,9 +123,10 @@ export default function LoginPage() {
             Sign in to your dashboard
           </p>
 
-          <label className="mt-8 block text-sm font-medium text-text-body">
+          <label className="mt-8 block text-sm font-medium text-text-body" htmlFor="login-username">
             Email / username
             <input
+              id="login-username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -128,9 +134,10 @@ export default function LoginPage() {
               className="mt-2 w-full rounded-lg border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent"
             />
           </label>
-          <label className="mt-5 block text-sm font-medium text-text-body">
+          <label className="mt-5 block text-sm font-medium text-text-body" htmlFor="login-password">
             Password
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -145,7 +152,7 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger"
-              role="alert"
+              role="alert" aria-live="assertive"
             >
               {error}
             </motion.p>

@@ -20,18 +20,24 @@ export function TopBar() {
     router.refresh();
   }
 
+  const businessName = brand.businessName || "GRABBER POS";
+
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-surface-1/90 px-5 backdrop-blur">
       <Link href="/" className="flex items-center gap-2">
         {brand.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={brand.logoUrl} alt="" className="h-7 w-7 rounded object-cover" />
+          <img
+            src={brand.logoUrl}
+            alt={`${businessName} logo`}
+            className="h-7 w-7 rounded object-cover"
+          />
         ) : null}
         <span className="text-lg font-semibold tracking-tight text-text-strong">
-          {brand.businessName || "GRABBER POS"}
+          {businessName}
         </span>
       </Link>
-      <div className="flex items-center gap-2">
+      <nav aria-label="Primary" className="flex items-center gap-2">
         <Link
           href="/"
           className="rounded-lg border border-line px-3 py-1.5 text-sm text-text-dim transition hover:border-accent hover:text-accent"
@@ -44,7 +50,7 @@ export function TopBar() {
         >
           Sign out
         </button>
-      </div>
+      </nav>
     </header>
   );
 }

@@ -58,7 +58,8 @@ export default function BarcodePage() {
 
         <ProductPicker onPick={addProduct} />
 
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-text-dim">
+        <fieldset className="mt-3 flex flex-wrap items-center gap-4 text-sm text-text-dim">
+          <legend className="sr-only">Label display options</legend>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -75,7 +76,7 @@ export default function BarcodePage() {
             />
             Show price
           </label>
-        </div>
+        </fieldset>
 
         {items.length > 0 && (
           <div className="mt-4 space-y-2">

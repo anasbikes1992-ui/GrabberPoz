@@ -137,9 +137,9 @@ export function ProductForm({
             transition={{ type: "spring", stiffness: 360, damping: 30 }}
             className="my-4 w-full max-w-2xl rounded-2xl border border-line bg-surface-1 p-6 shadow-2xl"
           >
-            <h2 className="text-lg font-semibold text-text-strong">
+            <h1 className="text-lg font-semibold text-text-strong">
               {product ? "Edit product" : "New product"}
-            </h2>
+            </h1>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <Text label="Name" value={form.name} onChange={(v) => set("name", v)} required span />
@@ -158,6 +158,8 @@ export function ProductForm({
               <label className="text-sm">
                 <span className="mb-1 block text-text-dim">Expiry date</span>
                 <input
+                  id="product-expiry-date"
+                  aria-label="Expiry date"
                   type="date"
                   value={form.expireDate}
                   onChange={(e) => set("expireDate", e.target.value)}

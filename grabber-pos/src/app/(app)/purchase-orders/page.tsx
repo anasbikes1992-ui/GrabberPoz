@@ -107,8 +107,8 @@ export default function PurchaseOrdersPage() {
       />
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <Input label="Supplier" value={supplier} onChange={setSupplier} />
-        <Input label="Reference" value={reference} onChange={setReference} />
+        <LabeledField label="Supplier" value={supplier} onChange={setSupplier} />
+        <LabeledField label="Reference" value={reference} onChange={setReference} />
       </div>
 
       <ProductPicker onPick={addProduct} />
@@ -119,7 +119,7 @@ export default function PurchaseOrdersPage() {
             Search and add products to order.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Purchase order line items">
             <thead>
               <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-text-dim">
                 <th className="px-4 py-2.5 font-medium">Product</th>
@@ -253,7 +253,7 @@ export default function PurchaseOrdersPage() {
   );
 }
 
-function Input({
+function LabeledField({
   label,
   value,
   onChange,
@@ -262,10 +262,13 @@ function Input({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const id = `field-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
-    <label className="text-sm">
+    <label className="text-sm" htmlFor={id}>
       <span className="mb-1 block text-text-dim">{label}</span>
       <input
+        id={id}
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"
