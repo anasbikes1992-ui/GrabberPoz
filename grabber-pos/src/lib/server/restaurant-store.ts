@@ -17,6 +17,11 @@ export interface OrderLine {
   quantity: number;
   /** How many of this line have already been sent to the kitchen/bar. */
   sentQty: number;
+  modifiers?: string[];
+  /** Dining course (1–3). */
+  course?: number;
+  /** Seat / cover number. */
+  seat?: number;
 }
 
 export interface Order {
@@ -86,23 +91,54 @@ export async function addItem(
   tableId: string,
   productId: string,
   qty = 1,
+  opts?: {
+    name?: string;
+    modifiers?: string[];
+    course?: number;
+    seat?: number;
+  },
 ): Promise<Order | null> {
   const product = findById(productId);
   if (!product) throw new Error(`Unknown product: ${productId}`);
+  const displayName =
+    opts?.name?.trim() ||
+    (opts?.modifiers?.length
+      ? `${product.name} (${opts.modifiers.join(", ")})`
+      : product.name);
+  const course =
+    opts?.course != null && opts.course >= 1 && opts.course <= 3
+      ? Math.floor(opts.course)
+      : undefined;
+  const seat =
+    opts?.seat != null && opts.seat > 0 ? Math.floor(opts.seat) : undefined;
   return mutate(tableId, (order) => {
-    const existing = order.lines.find((l) => l.productId === productId);
+    const existing = order.lines.find(
+      (l) =>
+        l.productId === productId &&
+        l.name === displayName &&
+        l.course === course &&
+        l.seat === seat,
+    );
     const lines = existing
       ? order.lines.map((l) =>
-          l.productId === productId ? { ...l, quantity: l.quantity + qty } : l,
+          l.productId === productId &&
+          l.name === displayName &&
+          l.course === course &&
+          l.seat === seat
+            ? { ...l, quantity: l.quantity + qty }
+            : l,
         )
       : [
           ...order.lines,
           {
             productId,
-            name: product.name,
+            name: displayName,
             unitPrice: product.salePrice,
             quantity: qty,
             sentQty: 0,
+            modifiers: opts?.modifiers,
+            course,
+            seat,
           },
         ];
     return { ...order, lines };
@@ -138,13 +174,28 @@ export async function removeItem(
 /** Mark all outstanding quantities as sent; return the newly-sent lines. */
 export async function markSent(
   tableId: string,
-): Promise<{ order: Order | null; sent: { name: string; quantity: number }[] }> {
-  const sent: { name: string; quantity: number }[] = [];
+): Promise<{
+  order: Order | null;
+  sent: { name: string; quantity: number; course?: number; seat?: number }[];
+}> {
+  const sent: {
+    name: string;
+    quantity: number;
+    course?: number;
+    seat?: number;
+  }[] = [];
   const order = await mutate(tableId, (o) => ({
     ...o,
     lines: o.lines.map((l) => {
       const delta = l.quantity - l.sentQty;
-      if (delta > 0) sent.push({ name: l.name, quantity: delta });
+      if (delta > 0) {
+        sent.push({
+          name: l.name,
+          quantity: delta,
+          course: l.course,
+          seat: l.seat,
+        });
+      }
       return { ...l, sentQty: l.quantity };
     }),
   }));

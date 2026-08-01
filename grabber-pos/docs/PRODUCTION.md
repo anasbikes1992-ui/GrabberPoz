@@ -54,8 +54,13 @@ Set these in the hosting project (Vercel → Settings → Environment Variables)
 | `SUPABASE_SERVICE_ROLE_KEY` | seeding / super-admin | **Server-only.** Never expose to the browser |
 | `WHATSAPP_TOKEN` | optional | WhatsApp Cloud API token for invoice sending |
 | `WHATSAPP_PHONE_NUMBER_ID` | optional | Sender number id |
-| `PRINTER_RECEIPT_IP` | optional | ESC/POS receipt printer |
-| `PRINTER_KITCHEN_IP` / `PRINTER_BAR_IP` | optional | KOT / BOT stations |
+| `PRINTER_RECEIPT_IP` | optional | ESC/POS receipt + cash-drawer kick |
+| `PRINTER_KOT_IP` | optional | Kitchen order ticket (KOT) |
+| `PRINTER_BOT_IP` | optional | Bar order ticket (BOT) |
+| `POS_SESSION_SECRET` | demo mode | Session cookie secret when not on Supabase |
+
+> Printer names match `ticket-printer.ts` / `/api/health`. Full paste checklist:
+> [CREDENTIALS.md](CREDENTIALS.md).
 
 The app treats the presence of the two `NEXT_PUBLIC_SUPABASE_*` vars as the switch
 into durable mode. Set both or neither — half-configured falls back to local files.
@@ -67,8 +72,8 @@ npm run seed
 ```
 
 Creates the organization, first branch, and owner login. Then import the client's
-catalog from **Products → Import** (Excel/CSV; the legacy grocery, pharmacy,
-bookshop and hardware layouts are all accepted).
+catalog from **Products → Import** (Excel/CSV; grocery, pharmacy, bookshop and
+hardware layouts are all accepted).
 
 ## 4. Deploy
 

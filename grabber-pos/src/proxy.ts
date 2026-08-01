@@ -4,6 +4,8 @@ import { isSupabaseEnabled } from "@/lib/supabase/config";
 const DEMO_COOKIE = "pos_session";
 const PUBLIC_PATHS = [
   "/login",
+  "/welcome",
+  "/display",
   "/api/auth/login",
   "/api/health",
   "/store",
@@ -22,7 +24,7 @@ const PUBLIC_PATHS = [
  */
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
   }
 

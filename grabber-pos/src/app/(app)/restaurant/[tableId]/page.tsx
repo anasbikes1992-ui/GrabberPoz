@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product, Sale } from "@/lib/types";
@@ -15,10 +15,16 @@ interface OrderLine {
   unitPrice: number;
   quantity: number;
   sentQty: number;
+  course?: number;
+  seat?: number;
 }
 interface Order {
   tableId: string;
   lines: OrderLine[];
+}
+
+function lineKey(l: OrderLine, idx: number) {
+  return `${l.productId}-${l.course ?? 0}-${l.seat ?? 0}-${l.name}-${idx}`;
 }
 
 export default function TableOrderPage() {
@@ -31,6 +37,7 @@ export default function TableOrderPage() {
   const [cash, setCash] = useState("");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<Sale | null>(null);
+  const [seatSplit, setSeatSplit] = useState(false);
 
   const load = useCallback(() => {
     fetch(`/api/restaurant/orders/${tableId}`)
@@ -62,7 +69,40 @@ export default function TableOrderPage() {
   }
 
   async function addItem(p: Product) {
-    const j = await act("addItem", { productId: p.id });
+    const courseRaw = window.prompt("Course (1–3, default 1)", "1");
+    if (courseRaw === null) return;
+    const courseN = Number(courseRaw);
+    const course =
+      Number.isFinite(courseN) && courseN >= 1 && courseN <= 3
+        ? Math.floor(courseN)
+        : 1;
+
+    const seatRaw = window.prompt("Seat number (optional)", "");
+    if (seatRaw === null) return;
+    const seatN = Number(seatRaw.trim());
+    const seat =
+      seatRaw.trim() && Number.isFinite(seatN) && seatN > 0
+        ? Math.floor(seatN)
+        : undefined;
+
+    const raw = window.prompt(
+      "Modifiers (optional, comma-separated)\ne.g. no onion, extra cheese",
+      "",
+    );
+    if (raw === null) return;
+    const mods = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const name =
+      mods.length > 0 ? `${p.name} (${mods.join(", ")})` : undefined;
+    const j = await act("addItem", {
+      productId: p.id,
+      name,
+      modifiers: mods,
+      course,
+      seat,
+    });
     if (j.success) setOrder(j.data);
   }
   async function setQty(productId: string, quantity: number) {
@@ -108,6 +148,34 @@ export default function TableOrderPage() {
   const lines = order?.lines ?? [];
   const total = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
   const newItems = lines.reduce((s, l) => s + (l.quantity - l.sentQty), 0);
+
+  const linesByCourse = useMemo(() => {
+    const map = new Map<number | "none", OrderLine[]>();
+    for (const l of lines) {
+      const key = l.course ?? "none";
+      const list = map.get(key) ?? [];
+      list.push(l);
+      map.set(key, list);
+    }
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === "none") return 1;
+      if (b[0] === "none") return -1;
+      return a[0] - b[0];
+    });
+  }, [lines]);
+
+  const seatTotals = useMemo(() => {
+    const map = new Map<number | "unassigned", number>();
+    for (const l of lines) {
+      const key = l.seat ?? "unassigned";
+      map.set(key, (map.get(key) ?? 0) + l.unitPrice * l.quantity);
+    }
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === "unassigned") return 1;
+      if (b[0] === "unassigned") return -1;
+      return a[0] - b[0];
+    });
+  }, [lines]);
 
   if (done) {
     return (
@@ -169,36 +237,56 @@ export default function TableOrderPage() {
               </p>
             ) : (
               <AnimatePresence initial={false}>
-                {lines.map((l) => (
-                  <motion.div
-                    key={l.productId}
-                    layout
-                    initial={{ opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 16 }}
-                    className="mb-2 rounded-lg border border-line bg-surface-2 p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-text-strong">
-                        {l.name}
-                        {l.quantity > l.sentQty && (
-                          <span className="ml-2 rounded-full bg-warn/15 px-1.5 py-0.5 text-[10px] text-warn">
-                            +{l.quantity - l.sentQty} new
+                {linesByCourse.map(([course, group]) => (
+                  <div key={String(course)} className="mb-3">
+                    {course !== "none" && (
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-dim">
+                        Course {course}
+                      </p>
+                    )}
+                    {group.map((l, idx) => (
+                      <motion.div
+                        key={lineKey(l, idx)}
+                        layout
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 16 }}
+                        className="mb-2 rounded-lg border border-line bg-surface-2 p-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-text-strong">
+                            {l.name}
+                            {l.seat != null && (
+                              <span className="ml-2 text-[10px] text-text-dim">
+                                seat {l.seat}
+                              </span>
+                            )}
+                            {l.quantity > l.sentQty && (
+                              <span className="ml-2 rounded-full bg-warn/15 px-1.5 py-0.5 text-[10px] text-warn">
+                                +{l.quantity - l.sentQty} new
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-sm font-semibold text-accent">
+                            {formatMoney(l.unitPrice * l.quantity)}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1">
+                          <StepBtn
+                            label="−"
+                            onClick={() => setQty(l.productId, l.quantity - 1)}
+                          />
+                          <span className="w-8 text-center text-sm font-semibold text-text-strong">
+                            {l.quantity}
                           </span>
-                        )}
-                      </p>
-                      <p className="text-sm font-semibold text-accent">
-                        {formatMoney(l.unitPrice * l.quantity)}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center gap-1">
-                      <StepBtn label="−" onClick={() => setQty(l.productId, l.quantity - 1)} />
-                      <span className="w-8 text-center text-sm font-semibold text-text-strong">
-                        {l.quantity}
-                      </span>
-                      <StepBtn label="+" onClick={() => setQty(l.productId, l.quantity + 1)} />
-                    </div>
-                  </motion.div>
+                          <StepBtn
+                            label="+"
+                            onClick={() => setQty(l.productId, l.quantity + 1)}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 ))}
               </AnimatePresence>
             )}
@@ -210,6 +298,37 @@ export default function TableOrderPage() {
               <p className="font-semibold text-text-strong">Total</p>
               <p className="text-xl font-bold text-accent">{formatMoney(total)}</p>
             </div>
+
+            {seatSplit && seatTotals.length > 0 && (
+              <div className="rounded-lg border border-line bg-surface-2 p-3">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-dim">
+                  Split by seat
+                </p>
+                {seatTotals.map(([seat, amt]) => (
+                  <div
+                    key={String(seat)}
+                    className="flex justify-between text-xs text-text-body"
+                  >
+                    <span>
+                      {seat === "unassigned" ? "Unassigned" : `Seat ${seat}`}
+                    </span>
+                    <span className="font-medium text-accent">
+                      {formatMoney(amt)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setSeatSplit((v) => !v)}
+              disabled={lines.length === 0}
+              className="w-full rounded-lg border border-line py-2 text-sm text-text-body transition hover:border-accent hover:text-accent disabled:opacity-40"
+            >
+              {seatSplit ? "Hide seat split" : "Split by seat"}
+            </button>
+
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => send("KOT")}

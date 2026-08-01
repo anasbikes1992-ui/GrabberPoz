@@ -42,6 +42,12 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [licenceMsg, setLicenceMsg] = useState<string | null>(null);
+  const [usage, setUsage] = useState<{
+    salesCount: number;
+    todayRevenue: number;
+    productCount: number;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/tenant")
@@ -56,7 +62,70 @@ export default function AdminPage() {
       })
       .catch(() => setError("Could not load the current configuration."))
       .finally(() => setLoading(false));
+
+    Promise.all([
+      fetch("/api/sales").then((r) => r.json()),
+      fetch("/api/products?pageSize=500").then((r) => r.json()),
+    ])
+      .then(([sj, pj]) => {
+        const sales = sj.success ? (sj.data as { total?: number; createdAt?: string }[]) : [];
+        const today = new Date().toISOString().slice(0, 10);
+        const todayRevenue = sales
+          .filter((s) => String(s.createdAt ?? "").startsWith(today))
+          .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+        const productCount =
+          pj.success && pj.data?.total != null
+            ? Number(pj.data.total)
+            : pj.success && Array.isArray(pj.data?.items)
+              ? pj.data.items.length
+              : 0;
+        setUsage({
+          salesCount: sales.length,
+          todayRevenue,
+          productCount,
+        });
+      })
+      .catch(() => undefined);
   }, []);
+
+  const planAmounts: Record<PlanTier, number> = {
+    starter: 2500,
+    business: 7500,
+    enterprise: 15000,
+  };
+
+  async function recordLicencePayment() {
+    setLicenceMsg(null);
+    try {
+      const amount = planAmounts[plan];
+      await fetch("/api/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "licence.payment",
+          details: `Recorded stub payment ${amount} for ${plan}`,
+          metadata: { plan, amount },
+        }),
+      });
+      try {
+        await fetch("/api/collections/income", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `Licence payment · ${PLAN_NAMES[plan]}`,
+            amount,
+            date: new Date().toISOString().slice(0, 10),
+            category: "licence",
+          }),
+        });
+      } catch {
+        // optional
+      }
+      setLicenceMsg(`Recorded stub payment of LKR ${amount.toLocaleString()}`);
+    } catch {
+      setLicenceMsg("Could not record payment");
+    }
+  }
 
   // Live preview of what the chosen plan unlocks.
   const enabled = planEnabledKeys(
@@ -253,6 +322,64 @@ export default function AdminPage() {
           Onboard a client
         </h2>
         <OnboardWizard key={wizardRun} onDone={() => setWizardRun((n) => n + 1)} />
+      </section>
+
+      <section className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-surface-1 p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-text-dim">
+            Licence billing (stub)
+          </h2>
+          <p className="mt-3 text-sm text-text-body">
+            Plan amount:{" "}
+            <span className="font-semibold text-accent">
+              LKR {planAmounts[plan].toLocaleString()}
+            </span>{" "}
+            / month (demo)
+          </p>
+          <p className="mt-1 text-xs text-text-dim">
+            Fiscal provider: stub · records audit (+ optional income)
+          </p>
+          <button
+            type="button"
+            onClick={() => void recordLicencePayment()}
+            className="mt-4 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink"
+          >
+            Record payment
+          </button>
+          {licenceMsg && (
+            <p className="mt-2 text-sm text-accent">{licenceMsg}</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-line bg-surface-1 p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-text-dim">
+            Usage this tenant
+          </h2>
+          {usage ? (
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <p className="text-[10px] uppercase text-text-dim">Sales listed</p>
+                <p className="mt-1 text-xl font-semibold text-text-strong">
+                  {usage.salesCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <p className="text-[10px] uppercase text-text-dim">Products</p>
+                <p className="mt-1 text-xl font-semibold text-text-strong">
+                  {usage.productCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <p className="text-[10px] uppercase text-text-dim">Today rev.</p>
+                <p className="mt-1 text-xl font-semibold text-accent">
+                  {usage.todayRevenue.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-text-dim">Loading usage…</p>
+          )}
+        </div>
       </section>
 
       {/* Client organizations */}

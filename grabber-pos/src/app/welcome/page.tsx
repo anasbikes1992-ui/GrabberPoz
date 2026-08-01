@@ -1,0 +1,472 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+const VERTICALS = [
+  {
+    mark: "R",
+    title: "Retail & supermarket",
+    body: "Barcode scanning, scale lines, cash drawer, and discount limits.",
+  },
+  {
+    mark: "D",
+    title: "Restaurant & cafe",
+    body: "Floor plans, split bills, and ESC/POS kitchen order tickets.",
+  },
+  {
+    mark: "S",
+    title: "Service & repair",
+    body: "Job sheets, status updates, parts and labour on one bill.",
+  },
+  {
+    mark: "W",
+    title: "Wholesale",
+    body: "Tier pricing, credit balances, bulk qty, and purchase GRNs.",
+  },
+  {
+    mark: "H",
+    title: "Hotels & rooms",
+    body: "Reservations, check-in/out, room service, and guest folios.",
+  },
+  {
+    mark: "I",
+    title: "Hire & rentals",
+    body: "Installment schedules, deposits, and overdue alerts.",
+  },
+] as const;
+
+const STOREFRONT_POINTS = [
+  "Real-time stock sync — web orders deduct POS inventory",
+  "Google Shopping feed for ads and product discovery",
+  "Meta & Google pixel hooks for retargeting",
+  "Schema markup for richer search listings",
+] as const;
+
+export default function WelcomePage() {
+  const [salesVolume, setSalesVolume] = useState(500000);
+
+  const timeSavedHours = Math.round((salesVolume / 100000) * 12);
+  const stockLossPrevented = Math.round(salesVolume * 0.035);
+  const extraWebSales = Math.round(salesVolume * 0.18);
+
+  return (
+    <div className="min-h-screen text-text-body selection:bg-accent/30 selection:text-text-strong">
+      <header className="sticky top-0 z-50 border-b border-line bg-surface-1/85 px-5 py-3.5 backdrop-blur-md sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+          <Link href="/welcome" className="flex min-w-0 items-center gap-2.5">
+            <span
+              aria-hidden
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-ink"
+            >
+              G
+            </span>
+            <span className="truncate text-lg font-semibold tracking-tight text-text-strong">
+              GRABBER POS Studio
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-6 text-sm text-text-dim md:flex">
+            <a href="#features" className="transition hover:text-accent">
+              Verticals
+            </a>
+            <a href="#storefront" className="transition hover:text-accent">
+              Storefront
+            </a>
+            <a href="#calculator" className="transition hover:text-accent">
+              ROI
+            </a>
+            <a href="#pricing" className="transition hover:text-accent">
+              Pricing
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/store/main-store"
+              target="_blank"
+              className="hidden rounded-xl border border-line px-3.5 py-2 text-sm text-text-dim transition hover:border-accent hover:text-accent sm:inline-flex"
+            >
+              Demo store
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero — brand, headline, support, CTAs, one visual plane */}
+      <section className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_70%_20%,var(--glow),transparent_55%)]"
+        />
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-12 lg:pb-20 lg:pt-20">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <p className="text-sm font-medium text-accent">
+              Grabber Mobility Solutions
+            </p>
+            <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-text-strong sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+              GRABBER POS Studio
+            </h1>
+            <p className="max-w-md text-base leading-relaxed text-text-dim sm:text-lg">
+              One operate-mode OS for counters, kitchens, and back office —
+              terminals, inventory, and a synced web storefront.
+            </p>
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
+              <Link
+                href="/login"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-accent px-6 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+              >
+                Open dashboard
+              </Link>
+              <Link
+                href="/store/main-store"
+                target="_blank"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-line px-6 text-sm font-semibold text-text-body transition hover:border-accent hover:text-accent"
+              >
+                View live storefront
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="relative min-h-[16rem] overflow-hidden rounded-2xl border border-line bg-surface-1 lg:min-h-[22rem]"
+            aria-hidden
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(145deg,oklch(23%_0.018_165)_0%,oklch(15%_0.014_165)_55%,oklch(19%_0.04_155_/_0.35)_100%)]" />
+            <div className="relative flex h-full flex-col p-5 sm:p-6">
+              <div className="flex items-center justify-between border-b border-line pb-3">
+                <span className="text-sm font-semibold text-text-strong">
+                  Retail terminal
+                </span>
+                <span className="font-mono text-xs text-accent">Live</span>
+              </div>
+              <div className="mt-4 grid flex-1 grid-cols-3 gap-2">
+                {["Milk 1L", "Bread", "Soap", "Rice 5kg", "Oil", "Tea"].map(
+                  (name) => (
+                    <div
+                      key={name}
+                      className="rounded-xl border border-line bg-surface-2/80 p-2.5"
+                    >
+                      <p className="truncate text-[11px] text-text-body">{name}</p>
+                      <p className="mt-1 font-mono text-xs font-medium text-accent">
+                        LKR {(120 + name.length * 17).toFixed(0)}
+                      </p>
+                    </div>
+                  ),
+                )}
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-xl border border-line bg-surface-2 px-4 py-3">
+                <span className="text-sm text-text-dim">Bill total</span>
+                <span className="font-mono text-lg font-semibold text-accent">
+                  LKR 2,840.00
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section
+        id="features"
+        className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.4 }}
+          className="max-w-xl space-y-2"
+        >
+          <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
+            Built for how you sell
+          </h2>
+          <p className="text-sm text-text-dim">
+            Switch vertical modes without changing your back office or inventory
+            ledger.
+          </p>
+        </motion.div>
+
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {VERTICALS.map((v, i) => (
+            <motion.div
+              key={v.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-20px" }}
+              transition={{ delay: i * 0.04, duration: 0.35 }}
+              className="rounded-2xl border border-line bg-surface-1/90 p-5 transition hover:border-accent/50"
+            >
+              <span
+                aria-hidden
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-sm font-semibold text-accent"
+              >
+                {v.mark}
+              </span>
+              <h3 className="mt-4 font-semibold tracking-tight text-text-strong">
+                {v.title}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-text-dim">{v.body}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        id="storefront"
+        className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:px-12"
+      >
+        <div className="grid grid-cols-1 items-center gap-10 rounded-2xl border border-line bg-surface-1 p-6 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10">
+          <div className="space-y-5">
+            <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
+              A storefront with every account
+            </h2>
+            <p className="text-sm leading-relaxed text-text-dim">
+              Each tenant gets a public e-commerce site wired to the same catalog
+              and stock — no separate Shopify stack required.
+            </p>
+            <ul className="space-y-3 text-sm text-text-body">
+              {STOREFRONT_POINTS.map((point) => (
+                <li key={point} className="flex items-start gap-2.5">
+                  <span
+                    aria-hidden
+                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                  />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/store/main-store"
+              target="_blank"
+              className="inline-flex h-11 items-center rounded-xl bg-accent px-5 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+            >
+              Preview tenant website
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-surface-0 p-5">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <span className="text-sm font-semibold text-text-strong">
+                Grabber Demo Store
+              </span>
+              <span className="font-mono text-[11px] text-accent">Synced</span>
+            </div>
+            <p className="mt-3 text-xs text-text-dim">
+              2,509 products · Islandwide delivery
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <p className="text-xs text-text-body">Jasmine Bouquet Freshener</p>
+                <p className="mt-1 font-mono text-sm font-medium text-accent">
+                  LKR 300.00
+                </p>
+              </div>
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <p className="text-xs text-text-body">Khomba Baby Cologne 100ml</p>
+                <p className="mt-1 font-mono text-sm font-medium text-accent">
+                  LKR 570.00
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="calculator"
+        className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12"
+      >
+        <div className="max-w-xl space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
+            Estimate monthly savings
+          </h2>
+          <p className="text-sm text-text-dim">
+            Rough ROI from checkout speed, inventory control, and web orders.
+          </p>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-line bg-surface-1 p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="font-medium text-text-body">
+              Estimated monthly sales
+            </span>
+            <span className="font-mono font-semibold text-accent">
+              LKR {salesVolume.toLocaleString("en-LK")}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={100000}
+            max={5000000}
+            step={50000}
+            value={salesVolume}
+            onChange={(e) => setSalesVolume(Number(e.target.value))}
+            aria-label="Estimated monthly sales volume"
+            className="mt-4 w-full accent-[var(--accent)]"
+          />
+
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+              <p className="text-xs text-text-dim">Time saved</p>
+              <p className="mt-1 font-mono text-2xl font-semibold text-text-strong">
+                {timeSavedHours}h
+              </p>
+            </div>
+            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+              <p className="text-xs text-text-dim">Stock loss prevented</p>
+              <p className="mt-1 font-mono text-2xl font-semibold text-accent">
+                LKR {stockLossPrevented.toLocaleString("en-LK")}
+              </p>
+            </div>
+            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+              <p className="text-xs text-text-dim">Extra web revenue</p>
+              <p className="mt-1 font-mono text-2xl font-semibold text-info">
+                LKR {extraWebSales.toLocaleString("en-LK")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="pricing"
+        className="mx-auto max-w-6xl px-5 py-8 pb-20 sm:px-8 lg:px-12"
+      >
+        <div className="max-w-xl space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
+            Simple plans
+          </h2>
+          <p className="text-sm text-text-dim">
+            No setup fees. Upgrade or cancel when you need to.
+          </p>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <PricingCard
+            name="Starter"
+            price="4,900"
+            blurb="Single-terminal retail shops."
+            features={[
+              "Single branch POS",
+              "Public e-commerce site",
+              "Up to 1,000 products",
+              "Cash & card billing",
+            ]}
+          />
+          <PricingCard
+            name="Growth"
+            price="9,900"
+            blurb="Multi-branch stores and dining."
+            featured
+            features={[
+              "Multi-branch terminals",
+              "Unlimited catalog",
+              "AI marketing suite",
+              "KOT & repair job cards",
+              "Ads pixel matrix",
+            ]}
+            cta="Start 14-day trial"
+          />
+          <PricingCard
+            name="Enterprise"
+            price="24,900"
+            blurb="Custom domain and dedicated ops."
+            features={[
+              "Everything in Growth",
+              "Custom domain mapping",
+              "White-label reseller",
+              "Dedicated DB branch",
+              "Priority support SLA",
+            ]}
+            cta="Contact sales"
+          />
+        </div>
+      </section>
+
+      <footer className="border-t border-line px-5 py-10 text-center text-xs text-text-dim sm:px-8 lg:px-12">
+        <p className="text-sm font-semibold text-text-strong">
+          GRABBER POS Studio
+        </p>
+        <p className="mt-2">
+          © {new Date().getFullYear()} Grabber Mobility Solutions (Pvt) Ltd. All
+          rights reserved.
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function PricingCard({
+  name,
+  price,
+  blurb,
+  features,
+  featured,
+  cta = "Get started",
+}: {
+  name: string;
+  price: string;
+  blurb: string;
+  features: string[];
+  featured?: boolean;
+  cta?: string;
+}) {
+  return (
+    <div
+      className={`flex flex-col rounded-2xl border p-6 ${
+        featured
+          ? "border-accent bg-surface-1 shadow-[0_0_0_1px_oklch(78%_0.15_155_/_0.25)]"
+          : "border-line bg-surface-1/80"
+      }`}
+    >
+      <div className="mb-3 min-h-4">
+        {featured ? (
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+            Most popular
+          </p>
+        ) : null}
+      </div>
+      <h3 className="text-lg font-semibold text-text-strong">{name}</h3>
+      <p className="mt-1 text-sm text-text-dim">{blurb}</p>
+      <p className="mt-4 font-mono text-3xl font-semibold text-text-strong">
+        LKR {price}
+        <span className="text-sm font-normal text-text-dim"> / mo</span>
+      </p>
+      <ul className="mt-5 flex-1 space-y-2 border-t border-line pt-5 text-sm text-text-body">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2">
+            <span aria-hidden className="text-accent">
+              ✓
+            </span>
+            {f}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href="/login"
+        className={`mt-6 inline-flex h-11 items-center justify-center rounded-xl text-sm font-semibold transition ${
+          featured
+            ? "bg-accent text-accent-ink hover:bg-accent-strong"
+            : "border border-line text-text-body hover:border-accent hover:text-accent"
+        }`}
+      >
+        {cta}
+      </Link>
+    </div>
+  );
+}

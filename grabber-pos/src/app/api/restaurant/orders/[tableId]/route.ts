@@ -24,6 +24,10 @@ interface ActionBody {
   action: "addItem" | "setQty" | "remove" | "send" | "settle";
   productId?: string;
   quantity?: number;
+  name?: string;
+  modifiers?: string[];
+  course?: number;
+  seat?: number;
   station?: TicketStation;
   paymentMethod?: "cash" | "card" | "wholesale";
   cashReceived?: number;
@@ -50,7 +54,17 @@ export async function POST(
     switch (body.action) {
       case "addItem": {
         if (!body.productId) return fail("productId is required");
-        const order = await addItem(tableId, body.productId, body.quantity ?? 1);
+        const order = await addItem(
+          tableId,
+          body.productId,
+          body.quantity ?? 1,
+          {
+            name: body.name,
+            modifiers: body.modifiers,
+            course: body.course,
+            seat: body.seat,
+          },
+        );
         return NextResponse.json({ success: true, data: order, error: null });
       }
       case "setQty": {
@@ -69,11 +83,28 @@ export async function POST(
         if (sent.length === 0) {
           return fail("Nothing new to send");
         }
-        const text = sent.map((s) => `${s.quantity} x ${s.name}`).join("\n");
-        const print = await printTicket(
-          station,
-          `Table ${tableId}\n${text}`,
-        );
+        const byCourse = new Map<number | "none", typeof sent>();
+        for (const s of sent) {
+          const key = s.course ?? "none";
+          const list = byCourse.get(key) ?? [];
+          list.push(s);
+          byCourse.set(key, list);
+        }
+        const parts: string[] = [`Table ${tableId}`];
+        const courseKeys = [...byCourse.keys()].sort((a, b) => {
+          if (a === "none") return 1;
+          if (b === "none") return -1;
+          return a - b;
+        });
+        for (const key of courseKeys) {
+          const group = byCourse.get(key)!;
+          if (key !== "none") parts.push(`— Course ${key} —`);
+          for (const s of group) {
+            const seat = s.seat != null ? ` (seat ${s.seat})` : "";
+            parts.push(`${s.quantity} x ${s.name}${seat}`);
+          }
+        }
+        const print = await printTicket(station, parts.join("\n"));
         return NextResponse.json({
           success: true,
           data: {

@@ -101,9 +101,12 @@ flags in a `--dart-define-from-file=env.json` for convenience (keep it gitignore
 KOT/BOT ticket printing (ESC/POS over TCP) is configured by env in the web app:
 
 ```
+PRINTER_RECEIPT_IP=192.168.123.100
 PRINTER_KOT_IP=192.168.123.101
 PRINTER_BOT_IP=192.168.123.102
 ```
+
+See [CREDENTIALS.md](CREDENTIALS.md) for the full env checklist.
 
 ## Tests
 

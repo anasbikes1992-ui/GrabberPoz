@@ -5,7 +5,19 @@ export interface AuditLogEvent {
   id: string;
   timestamp: string;
   actor: string;
-  action: "cart.item_removed" | "price.overridden" | "discount.authorized" | "drawer.manual_open" | "sale.created";
+  action:
+    | "cart.item_removed"
+    | "price.overridden"
+    | "discount.authorized"
+    | "drawer.manual_open"
+    | "sale.created"
+    | "sale.voided"
+    | "register.opened"
+    | "register.closed"
+    | "stocktake.posted"
+    | "transfer.approved"
+    | "manager.unlock"
+    | "licence.payment";
   details: string;
   metadata?: Record<string, unknown>;
 }

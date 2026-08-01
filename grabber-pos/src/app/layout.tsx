@@ -1,21 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+const sans = DM_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
+const mono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "GRABBER POS Studio",
+  title: {
+    default: "GRABBER POS Studio",
+    template: "%s · GRABBER POS Studio",
+  },
   description:
-    "Point-of-sale platform by Grabber Mobility Solutions (Pvt) Ltd",
+    "Multi-vertical point-of-sale by Grabber Mobility Solutions (Pvt) Ltd",
+  applicationName: "GRABBER POS Studio",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
@@ -26,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

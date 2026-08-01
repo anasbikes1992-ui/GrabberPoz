@@ -1,112 +1,118 @@
 # GRABBER POS Studio — Complete Feature & Build Plan
 
-**Goal:** rebuild the full "Easy POS v5.32" system as GRABBER POS Studio — a
-multi-vertical business-management + POS platform — with a cleaner UI, and
-package it for **reselling to clients** (build docs + user docs + licensing).
+**Goal:** ship GRABBER POS Studio as a multi-vertical business-management + POS
+platform — cleaner UI, durable backend, packaged for **reselling to clients**
+(build docs + user docs + licensing).
 
 ## Source of truth
 
-This revision is built from **direct observation of the live authenticated
-system** (screens shared 2026-07-22): the home launcher (`index2.php`), the
-business-management menu (`options.php`), the products list (`products.php`), and
-the billing screen (`add-sale-newm`). Everything below is **confirmed**, not
-inferred, unless marked ⚠.
+Module inventory is maintained against `src/lib/modules.ts` and live
+`src/app/(app)/**/page.tsx` routes. Status markers track delivery.
 
-Status: ✅ built · 🟡 partial · ⬜ planned
+Status: ✅ built · 🟡 thin but present · ⬜ truly missing
+
+Audited against the app (not this file’s prior roadmap guesses). See also
+[PRODUCT-GAP.md](PRODUCT-GAP.md) (gaps closed) and [CREDENTIALS.md](CREDENTIALS.md)
+(env handoff).
 
 ---
 
 ## 1. Operation / Sale modes (home launcher)
 
-The legacy home is a tile launcher of **sale modes** — the same catalog + billing
+The home launcher is a tile grid of **sale modes** — the same catalog + billing
 engine specialized per vertical. This is the platform's defining feature.
 
 | Mode | Purpose | Vertical | Status |
 |------|---------|----------|--------|
-| Retail Mode | Standard barcode retail billing | shops | 🟡 |
-| Sale Mode | Generic quick sale | any | 🟡 |
-| Category Sale Mode (CAT MOD) | Sell by category grid (no barcodes) | cafes, apparel | ⬜ |
-| Restaurant Mode (Rest MOD) | Tables, KOT/BOT, courses | food & beverage | ⬜ |
-| Delivery Mode | Orders for delivery + driver assign | food, retail | ⬜ |
-| Repair Mode | Item repair intake → job → billing | electronics, phones | ⬜ |
-| Vehicle Service Mode (Service MOD) | Vehicle service jobs + parts + labour | garages | ⬜ |
-| Reloads | Mobile top-ups / reload sales | comms shops | ⬜ |
-| Room Management | Hotel/guesthouse room booking + billing | hospitality | ⬜ |
-| Rent Mode | Rental items, periods, returns, deposits | equipment rental | ⬜ |
-| Hire Purchase | Installment sales + schedules | appliances, furniture | ⬜ |
-| Play Area | Time-based play sessions billing | kids play centres | ⬜ |
-| Register / Other Mode (Reg MOD) | Misc/other sale | any | ⬜ |
+| Retail Mode | Standard barcode retail billing | shops | ✅ `/pos` |
+| Wholesale Mode | Wholesale pricing on shared terminal | wholesale | ✅ `/pos?mode=wholesale` |
+| Category Sale Mode | Sell by category grid (no barcodes) | cafes, apparel | ✅ `/pos?mode=category` |
+| Restaurant Mode | Tables, KOT/BOT, courses | food & beverage | ✅ `/restaurant` + `/tables` + `/kds` |
+| Delivery Mode | Orders for delivery + driver assign | food, retail | ✅ `/delivery` + `/drivers` |
+| Repair Mode | Item repair intake → job → billing | electronics, phones | 🟡 `/repair` (JobBoard) |
+| Vehicle Service Mode | Vehicle service jobs + parts + labour | garages | 🟡 `/service` (JobBoard) |
+| Reloads | Mobile top-ups / reload sales | comms shops | ✅ `/reloads` |
+| Room Management | Hotel/guesthouse room booking + billing | hospitality | 🟡 `/rooms` (BookingBoard) |
+| Rent Mode | Rental items, periods, returns, deposits | equipment rental | 🟡 `/rent` (BookingBoard) |
+| Hire Purchase | Installment sales + schedules | appliances, furniture | ✅ `/hire-purchase` |
+| Play Area | Time-based play sessions billing | kids play centres | ✅ `/play` |
+| Layaway | Deposits & holds | retail | ✅ `/layaway` |
+| Click & collect | Pick list | retail | ✅ `/click-collect` |
+| Register / Other Mode | Misc/other sale | any | ⬜ (cash **Register** at `/register` is shift/Z — not this mode) |
 | Digital Mode | Digital-goods sale | any | ⬜ |
-| **Offline Mode** | Bill without internet, sync later | all | 🟡 (mobile) |
+| **Offline Mode** | Bill without internet, sync later | all | 🟡 web SW + offline queue; Flutter offline POS separate |
 
 > The **billing engine** (below) is shared; each mode adds its own entities and
 > pre/post steps (a table, a room, a repair job, an installment plan…).
 
 ---
 
-## 2. The billing engine (add-sale-newm) — confirmed spec
+## 2. The billing engine — confirmed spec
 
-The core screen every mode reuses. Fields observed:
+The core screen every mode reuses (`/pos`, BillPanel + cart store).
 
 **Cashier bar** — cashier name, date, back/home/history.
-**Item entry** — searchable barcode dropdown (`code – variant – name – Rs.price –
-QTY`); "Add none-stock items"; Retail⇄Wholesale toggle; per-line: Name, Quantity,
-Sale Price, **Maximum Discount**, Your Discount Rs, Your Discount %, New Price →
-**Add (CTRL)**.
+**Item entry** — searchable barcode dropdown; non-stock / custom lines; Retail⇄Wholesale
+toggle; per-line discounts → **Add (CTRL)**.
 **Cart / Billed items** — line list, Sub-total, Total (LKR).
-**Charges & discount** — Service charge, Final Discount (Rs), Final Discount (%).
-**Payment** — Payment Type (F1: cash/card/…), Customer (F2: Random/select),
-Customer Name, Customer Mobile, Employee (F3), Customer paid (F4), Balance.
-**Actions** — Cancel · **Proceed (INSERT)**. Keyboard: F1–F4, CTRL, INSERT.
+**Charges & discount** — Service charge, Final Discount (Rs / %).
+**Payment** — Payment Type (F1), Customer (F2), Employee (F3), Customer paid (F4),
+Balance; split tender (cash + card); gift-card balance check.
+**Actions** — Cancel · **Proceed (INSERT)** · Hold / Recall. Keyboard: F1–F4, CTRL, INSERT.
 
-Status vs GRABBER today: cart, per-unit discount cap, cash/change ✅ · service
-charge, final discount Rs/%, customer capture, employee, split/change, F-key
-shortcuts, none-stock items, wholesale toggle ⬜ (next).
-
----
-
-## 3. Product management (products.php) — confirmed spec
-
-Toolbar: **Add** (New · Quick · Excel · Global · GRN) · **Manage** · filter tabs
-(All · Pending · Stock · Brands) · **Barcode · Print · Settings · P.Settings ·
-Package**. Body: name/barcode filter + category dropdown, **Download Products**,
-product cards (image, name, code e.g. `CL10262`, `Stock – 1.00`, price
-`Rs..4,500.00/=`, In/Out-Stock badge) with per-card actions: **print label ·
-print · view · edit · delete**.
-
-Status: list + search + category filter ✅ · add/edit/delete, Excel in/out,
-barcode/label print, packages, pending, brands ⬜.
+Status vs GRABBER today: **shipped** — cart, per-unit discount cap, service charge &
+final discount, F-key shortcuts, none-stock items, split tender, held bills, cash/change,
+customer + loyalty redeem, print / WhatsApp, retail⇄wholesale, manager PIN on large
+discount / price override, serials, multi-currency tender, training mode. See
+[PRODUCT-GAP.md](PRODUCT-GAP.md) §2.
 
 ---
 
-## 4. Management modules (options.php) — confirmed full list
+## 3. Product management — confirmed spec
 
-Grouped for delivery. All are org/branch-scoped with RLS + audit.
+Toolbar: **Add** (form) · **Import / Export Excel** · search. Separate modules for
+**Barcode labels**, **Packages**, **Variants**, **Brands**, **Categories**.
+
+Status: list + search + add/edit/delete ✅ · Excel in/out ✅ · barcode/label print ✅
+(`/barcode`, multi-select + size templates) · packages 🟡 · variants ✅ · brands ✅ ·
+legacy “Pending / P.Settings / Global” tabs ⬜ (not mirrored 1:1).
+
+---
+
+## 4. Management modules — confirmed full list
+
+Grouped for delivery. Active tiles in `modules.ts` link to live screens (many CRUD
+modules use shared `CollectionManager` / boards — functional, not always deep UX).
 
 **Catalog & stock**
-Products 🟡 · Category 🟡 · Brands ⬜ · Suppliers 🟡 · GRN (Goods Received Note) 🟡 ·
-Purchasing Orders ⬜ · Damages ⬜ · Returns ⬜ · Packages ⬜.
+Products ✅ · Category ✅ · Brands ✅ · Suppliers ✅ · GRN ✅ · Purchasing Orders ✅ ·
+Damages ✅ · Returns ✅ · Packages 🟡 · Variants ✅ · Inventory ✅ · Stocktake ✅ ·
+Transfers ✅ · Barcode labels ✅.
 
 **Sales & billing**
-Sales Bills ✅ · Bills ⬜ · Quotations ⬜ · Manual Payments ⬜ · Digital Mode ⬜ ·
-Gift Vouchers ⬜ · Points (loyalty) ⬜.
+Sales history ✅ `/sales` · Quotations ✅ · Manual Payments ✅ · Gift Vouchers ✅ ·
+Layaway ✅ · Click & collect ✅ · Digital Mode ⬜ · standalone “Bills” module ⬜
+(covered by Sales) · Points (loyalty) 🟡 (via customers / redeem on POS).
 
 **Customers**
-Customers ⬜ · Points ⬜ · Appointments ⬜ · SMS (service) ⬜.
+Customers ✅ · Appointments ✅ · SMS templates ✅ · Points 🟡.
 
 **Staff / HR**
-Employees ⬜ · Attendance ⬜ · Salary ⬜ · Admins (users/roles) 🟡 · Add Jobs ⬜.
+Employees ✅ · Attendance ✅ · Salary ✅ · Users & admins ✅ · Permissions ✅ ·
+Jobs ✅ · Register (open/close / X·Z) ✅.
 
 **Money**
-Accounts (income) ⬜ · Expenses ⬜ · Cash In ⬜ · Cash Out ⬜ · Add Currency Rate ⬜.
+Income ✅ · Expenses ✅ · Cash In ✅ · Cash Out ✅ · Currency ✅.
 
 **Operations**
-Tables ⬜ · Rooms ⬜ · Delivery Vehicles ⬜ · Play Area ⬜ · Repair/Service jobs ⬜ ·
-Hire Purchase ⬜ · Rent ⬜.
+Tables ✅ · Rooms 🟡 · Delivery + drivers ✅ · Play Area ✅ · Repair / Service 🟡 ·
+Hire Purchase ✅ · Rent 🟡 · Restaurant + KDS ✅ · Reloads ✅.
 
 **Reports & system**
-Dashboard 🟡 · Reports ⬜ · Alerts/Notifications ⬜ · Settings ⬜ · Your Updates ⬜ ·
-Videos (help) ⬜ · Drivers & Softwares ⬜ · Agreement (license) ⬜ · Clear Data ⬜.
+Dashboard ✅ · Reports ✅ · Alerts ✅ · Audit log ✅ · Settings ✅ · Help & guides ✅ ·
+Customer display ✅ `/display` · Privacy purge ✅ · Super-admin / licensing ✅ ·
+Drivers & Softwares (downloads hub) ⬜ · Agreement (dedicated screen) 🟡 (licence in admin) ·
+Clear Data (full wipe) ⬜ (PII purge only).
 
 ---
 
@@ -114,22 +120,23 @@ Videos (help) ⬜ · Drivers & Softwares ⬜ · Agreement (license) ⬜ · Clear
 
 Current schema already covers: organizations, branches, profiles, products,
 barcodes, categories, suppliers, branch_stock, stock_movements, purchases(=GRN)
-+ lines, registers, shifts, sales + lines, payments, audit.
++ lines, registers, shifts, sales + lines, payments, audit, plus later migrations
+for `app_collections`, `app_documents`, stock documents, product images,
+reseller licences.
 
-New tables to add (grouped; each gets RLS + definer RPCs where it moves money/stock):
+Many vertical / CRM / HR entities are stored via **app collections** rather than
+dedicated tables — enough for ship; deepen schema when a vertical needs reporting
+or RLS-grade isolation.
 
-- **Catalog**: `brands`, `units`, `packages` (bundle), `product_variants`.
-- **Stock**: `sale_returns(+lines)`, `damages(+lines)`, `purchase_orders(+lines)`.
-- **Customers**: `customers`, `loyalty_points`(ledger), `gift_vouchers`,
-  `appointments`, `sms_log`.
-- **HR**: `employees`, `attendance`, `salaries`, `employee_jobs`.
-- **Money**: `expenses(+categories)`, `income_accounts`, `cash_movements`
-  (in/out), `currency_rates`, `manual_payments`.
-- **Verticals**: `tables`, `rooms(+bookings)`, `delivery_vehicles(+deliveries)`,
-  `play_sessions`, `repair_jobs(+parts/labour)`, `service_jobs`,
-  `hire_purchase(+installments)`, `rentals(+returns)`.
-- **System**: `settings`(kv per org/branch), `quotations(+lines)`, `bills`,
-  `notifications`, `licenses`(for reselling).
+Still optional dedicated tables (if you outgrow collections):
+
+- **Catalog**: richer `packages` / `product_variants` (SKU matrix UI already exists).
+- **Stock**: first-class `sale_returns`, `damages`, `purchase_orders` (UI present).
+- **Customers**: `loyalty_points` ledger, `gift_vouchers`, `appointments`, `sms_log`.
+- **HR**: `employees`, `attendance`, `salaries`.
+- **Money**: `expenses`, `cash_movements`, `currency_rates`.
+- **Verticals**: `tables`, `rooms`, deliveries, play/repair/hire/rent entities.
+- **System**: `settings`, `quotations`, `notifications`, `licenses` (partially present).
 
 ---
 
@@ -137,68 +144,55 @@ New tables to add (grouped; each gets RLS + definer RPCs where it moves money/st
 
 To sell to clients, the platform needs:
 
-- **Tenant provisioning** — self-serve or admin-created org per client.
-- **White-label** — per-org business name, logo, colors, receipt branding,
-  optional custom domain.
-- **Licensing** — plan tiers, feature flags per module/vertical, expiry, the
-  in-app **Agreement** screen; a `licenses` table + enforcement.
-- **Super-admin console** — manage client orgs, plans, billing, broadcast
-  updates (the legacy "Your Updates"/"Videos").
-- **Client onboarding** — import catalog (Excel), create branches/registers,
-  add staff — packaged as a wizard + the build/use docs.
+- **Tenant provisioning** — self-serve or admin-created org per client. 🟡
+- **White-label** — per-org business name, logo, colors, receipt branding. 🟡 `/admin`
+- **Licensing** — plan tiers, feature flags, expiry; server-side sell block. ✅ stub + enforce
+- **Super-admin console** — manage orgs / branding / usage. ✅ `/admin`
+- **Client onboarding** — Excel import + docs. 🟡 (no full wizard yet)
 
-Decision needed — see the questions I'm asking alongside this plan
-(multi-tenant SaaS vs per-client white-label deploys vs both).
+Decision needed — multi-tenant SaaS vs per-client white-label deploys vs both.
 
 ---
 
-## 7. Delivery roadmap (revised for the real scope)
+## 7. Delivery roadmap (status)
 
-**P0 Foundation** ✅ — multi-tenant schema, atomic sales, RLS, web POS +
-inventory + sales + dashboard, Flutter offline POS, docs, tests.
+**P0 Foundation** ✅ — multi-tenant schema, atomic sales, RLS, web POS + inventory +
+sales + dashboard, offline queue / SW, docs, tests.
 
-**P1 Core billing parity** — upgrade the billing engine to the confirmed spec
-(service charge, final discount Rs/%, customer capture, employee, wholesale
-toggle, none-stock items, F-key shortcuts, change/split) + full Products CRUD
-(add/edit/delete, Excel in/out, barcode/label print, brands, packages).
+**P1 Core billing parity** ✅ — service charge, final discount, F-keys, none-stock,
+split / hold, products CRUD + Excel, barcode labels, brands, packages (thin), variants.
 
-**P2 Commerce core** — Customers, Points/loyalty, Gift vouchers, Returns,
-Damages, Quotations, GRN + Purchase Orders, Suppliers CRUD.
+**P2 Commerce core** ✅ — Customers, vouchers, returns, damages, quotations, GRN,
+purchase orders, suppliers (collection depth varies).
 
-**P3 Money & HR** — Expenses, Accounts/income, Cash in/out, Currency rates;
-Employees, Attendance, Salary, Admins/roles UI.
+**P3 Money & HR** ✅ — Expenses, income, cash in/out, currency; employees, attendance,
+salary, users/roles + permissions UI.
 
-**P4 Reports & dashboard** — full report catalog + charts + exports.
+**P4 Reports & dashboard** ✅ — dashboard, reports module, alerts, exports (deepen charts as needed).
 
-**P5 Verticals (per priority)** — Restaurant (tables/KOT), Delivery, Repair &
-Vehicle service, Rooms/hotel, Reloads, Rent, Hire purchase, Play area,
-Category mode.
+**P5 Verticals** 🟡 — Restaurant/KDS/delivery/reloads/hire/play ✅-ish; repair/service/rooms/rent thin boards; Digital + Register/Other modes still ⬜.
 
-**P6 Reselling** — white-label branding, licensing + feature flags, super-admin
-console, onboarding wizard, Agreement.
+**P6 Reselling** 🟡 — admin branding & licence stub + gating; onboarding wizard / Agreement polish open.
 
-**P7 Settings, notifications, SMS, help (videos), updates.**
+**P7 Settings, notifications, SMS, help** ✅ — settings, alerts, SMS templates, help; dedicated “Drivers & Softwares” hub ⬜.
 
-**P8 Hardening & launch** — CI, e2e, backups, move into Jarvis 2 as `apps/pos`,
-deploy, client rollout + training materials.
+**P8 Hardening & launch** 🟡 — typecheck/tests/docs present; production cutover awaits real Supabase / WhatsApp / printer credentials ([CREDENTIALS.md](CREDENTIALS.md)).
 
-**Documentation (parallel):** BUILD guide (developers) + USER guide (per module,
-per vertical) + RESELLER guide (provisioning, branding, licensing) — all in
-`docs/`.
+**Documentation (parallel):** BUILD / USER / RESELLER / PRODUCTION / DEPLOYMENT /
+FEATURE-PLAN / PRODUCT-GAP / CREDENTIALS — in `docs/`.
 
 ---
 
 ## 8. Confirmed by the screens (previously ⚠, now resolved)
 
-- Restaurant/table mode **yes** (Rest MOD + Tables). KOT/BOT confirmed.
-- Customer credit/loyalty **yes** (Customers, Points, Customer paid/Balance).
+- Restaurant/table mode **yes** (Rest MOD + Tables + KDS). KOT/BOT confirmed.
+- Customer credit/loyalty **yes** (Customers, redeem on POS).
 - Discounts: per-line max + Your Rs/% **and** final Rs/% + service charge.
 - Multi-branch, multi-vertical, wholesale toggle, employee-on-sale — all yes.
-- Roles: **Admins** module (staff/roles). Exact permission granularity ⚠ (need
-  the Admins + Settings screens).
+- Roles: Users & Permissions modules (PIN, idle lock, matrix, per-user overrides).
 
 ## 9. Still worth a look (optional, to refine)
 
-Admins/roles screen, Settings screen contents, one report layout, a receipt
-print sample, and one vertical flow end-to-end (e.g. Restaurant or Rooms). Not
-blocking — I can build from the standard behavior and you correct as we go.
+Polish thin vertical boards (repair / service / rooms / rent), Digital mode if
+needed, Agreement / Drivers hub, and collection → first-class schema where
+reporting demands it. Not blocking production cutover once credentials are in.

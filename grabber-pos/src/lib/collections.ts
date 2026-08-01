@@ -283,6 +283,48 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
       rate: z.coerce.number().min(0, "Rate is required"),
     }),
   },
+  packages: {
+    name: "packages",
+    singular: "Package",
+    plural: "Packages",
+    icon: "📦",
+    subtitle: "Product packs & variants",
+    fields: [
+      { key: "name", label: "Name", type: "text", required: true, inList: true },
+      { key: "productId", label: "Product ID", type: "text", required: true, inList: true },
+      { key: "qty", label: "Qty per pack", type: "number", required: true, inList: true },
+      { key: "price", label: "Pack price", type: "number", required: true, money: true, inList: true },
+    ],
+    schema: z.object({
+      name: text().min(1, "Name is required"),
+      productId: text(80).min(1, "Product ID is required"),
+      qty: z.coerce.number().min(1, "Qty must be at least 1"),
+      price: z.coerce.number().min(0, "Price is required"),
+    }),
+  },
+  variants: {
+    name: "variants",
+    singular: "Variant",
+    plural: "Product variants",
+    icon: "🧬",
+    subtitle: "SKU matrix (size, colour, etc.)",
+    fields: [
+      { key: "productId", label: "Parent product ID", type: "text", required: true, inList: true },
+      { key: "name", label: "Variant name", type: "text", required: true, inList: true },
+      { key: "sku", label: "SKU", type: "text", required: true, inList: true },
+      { key: "price", label: "Price", type: "number", required: true, money: true, inList: true },
+      { key: "quantity", label: "Qty", type: "number", required: true, inList: true },
+      { key: "barcode", label: "Barcode", type: "text", inList: true },
+    ],
+    schema: z.object({
+      productId: text(80).min(1, "Parent product ID is required"),
+      name: text().min(1, "Name is required"),
+      sku: text(80).min(1, "SKU is required"),
+      price: z.coerce.number().min(0, "Price is required"),
+      quantity: z.coerce.number().min(0).default(0),
+      barcode: optionalText(80),
+    }),
+  },
   clients: {
     name: "clients",
     singular: "Client",
@@ -477,8 +519,8 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
       message: text(500).min(1, "Message is required"),
     }),
   },
-  addjobs: {
-    name: "addjobs",
+  jobs: {
+    name: "jobs",
     singular: "Job",
     plural: "Jobs",
     icon: "🧰",
@@ -504,10 +546,10 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
       note: optionalText(500),
     }),
   },
-  updates: {
-    name: "updates",
-    singular: "Update",
-    plural: "Updates & help",
+  help: {
+    name: "help",
+    singular: "Guide",
+    plural: "Guides",
     icon: "📣",
     subtitle: "Release notes & training videos",
     fields: [

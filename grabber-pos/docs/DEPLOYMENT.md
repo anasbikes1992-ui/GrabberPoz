@@ -12,7 +12,8 @@ It can also live inside the Grabber AI Studio monorepo as `apps/pos`.
 | `NEXT_PUBLIC_SUPABASE_URL` | all | public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | all | public |
 | `SUPABASE_SERVICE_ROLE_KEY` | server | **secret** — never expose |
-| `PRINTER_KOT_IP` / `PRINTER_BOT_IP` | server | only if printing from the server |
+| `PRINTER_RECEIPT_IP` | server | receipt + drawer (on-prem / print agent) |
+| `PRINTER_KOT_IP` / `PRINTER_BOT_IP` | server | kitchen / bar tickets |
 
 > Thermal printing needs a TCP route to the printers, so it runs from an
 > on-prem/self-hosted deployment or a store-local agent — not from Vercel's edge.
@@ -81,9 +82,9 @@ A minimal pipeline:
 - run: cd grabber-pos-mobile && flutter pub get && flutter analyze && flutter test
 ```
 
-## Rollout from the legacy system
+## Cutover checklist
 
-1. Export the current catalog (Excel/CSV) — already normalized for grocery.
+1. Export the current catalog (Excel/CSV) — grocery layout is already normalized.
 2. Run `npm run seed` (or a per-vertical variant) to load it into Supabase.
 3. Train cashiers on the web POS; deploy the mobile app to handhelds.
-4. Retire the old Electron desktop wrapper and hosted PHP app.
+4. Point traffic at the new deployment and retire the previous system.

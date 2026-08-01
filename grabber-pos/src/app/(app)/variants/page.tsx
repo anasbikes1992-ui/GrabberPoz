@@ -2,6 +2,6 @@
 
 import { CollectionManager } from "@/components/collections/CollectionManager";
 
-export default function UpdatesPage() {
-  return <CollectionManager name="updates" />;
+export default function VariantsPage() {
+  return <CollectionManager name="variants" />;
 }

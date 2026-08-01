@@ -5,7 +5,7 @@ import { createSaleSchema } from "@/lib/validation";
 export async function GET() {
   try {
     const repo = await getRepository();
-    const sales = await repo.listSales();
+    const sales = await repo.listSales(200);
     return NextResponse.json({ success: true, data: sales, error: null });
   } catch (error) {
     return NextResponse.json(

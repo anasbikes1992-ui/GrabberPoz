@@ -15,8 +15,8 @@ operate a single deployment for everyone.
 Onboarding a client:
 1. Create the client's **organization** + first **branch** + **owner** login
    (`npm run seed`), then record them via **Super-admin → Onboard a client**.
-2. Import their catalog (Excel) — the importer accepts the legacy grocery /
-   pharmacy / bookshop / hardware formats.
+2. Import their catalog (Excel) — grocery / pharmacy / bookshop / hardware
+   column layouts are accepted.
 3. Set their **branding** (business name, logo, receipt header) in Settings.
 4. Hand over the owner login; they add staff and start selling.
 
@@ -94,9 +94,8 @@ badge on the launcher.
 
 ### Broadcasting updates
 
-The **Updates & help** module carries release notes, notices and training video
-links to every client on every plan — the replacement for the legacy "Your
-Updates" / "Videos" screens.
+The **Help & guides** module carries release notes, notices and training video
+links to every client on every plan.
 
 > Still on the roadmap: a cross-client usage & billing dashboard. The
 > `reseller_licences` view (service-role only) already rolls licences, branch and
@@ -125,4 +124,4 @@ You set the commercials; a common structure for this market:
 
 - All clients on the multi-tenant cloud get updates automatically when you deploy.
 - White-label clients are updated per instance — keep a deployment list.
-- Point clients at the in-app help (videos/updates) and the [User Guide](USER-GUIDE.md).
+- Point clients at the in-app Help & guides module and the [User Guide](USER-GUIDE.md).

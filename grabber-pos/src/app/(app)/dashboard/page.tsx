@@ -48,11 +48,20 @@ export default async function DashboardPage() {
       </div>
 
       <section className="mt-10">
-        <h2 className="text-lg font-medium text-text-strong">Recent sales</h2>
+        <h2 className="text-lg font-medium tracking-tight text-text-strong">Recent sales</h2>
         {recent.length === 0 ? (
-          <p className="mt-4 rounded-xl border border-dashed border-line p-8 text-center text-sm text-text-dim">
-            No sales yet — open a sale mode to make the first one.
-          </p>
+          <div className="mt-4 rounded-2xl border border-dashed border-line bg-surface-1/40 px-6 py-10 text-center">
+            <p className="font-medium text-text-strong">No sales yet</p>
+            <p className="mt-1 text-sm text-text-dim">
+              Open a sale mode to post the first bill.
+            </p>
+            <a
+              href="/pos"
+              className="mt-5 inline-flex rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+            >
+              Open retail terminal
+            </a>
+          </div>
         ) : (
           <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface-1">
             {recent.map((s) => (

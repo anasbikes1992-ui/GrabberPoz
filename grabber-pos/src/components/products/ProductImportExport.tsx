@@ -82,9 +82,8 @@ export function ProductImportExport({
         />
       </div>
       <p className="mt-2 text-xs text-text-dim">
-        Accepts the legacy Easy POS exports (grocery, pharmacy, bookshop,
-        hardware) — headers are matched automatically. Existing products are
-        matched by barcode and updated.
+        Accepts grocery, pharmacy, bookshop, and hardware catalog spreadsheets.
+        Headers are matched automatically; existing products are updated by barcode.
       </p>
 
       <AnimatePresence>

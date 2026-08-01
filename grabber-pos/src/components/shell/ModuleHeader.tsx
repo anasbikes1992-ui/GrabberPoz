@@ -13,28 +13,37 @@ interface ModuleHeaderProps {
 export function ModuleHeader({ title, subtitle, actions }: ModuleHeaderProps) {
   const router = useRouter();
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-text-dim transition hover:border-accent hover:text-accent"
-        >
-          ←
-        </button>
-        <Link
-          href="/"
-          aria-label="Home"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-text-dim transition hover:border-accent hover:text-accent"
-        >
-          ⌂
-        </Link>
-        <div>
-          <h1 className="text-xl font-semibold text-text-strong">{title}</h1>
-          {subtitle && <p className="text-sm text-text-dim">{subtitle}</p>}
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-line text-text-dim transition duration-150 hover:border-accent hover:text-accent"
+          >
+            ←
+          </button>
+          <Link
+            href="/"
+            aria-label="Home"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-line text-text-dim transition duration-150 hover:border-accent hover:text-accent"
+          >
+            ⌂
+          </Link>
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight text-text-strong sm:text-2xl">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="mt-0.5 text-sm text-text-dim">{subtitle}</p>
+          ) : null}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

@@ -157,16 +157,34 @@ export default function MarketingPage() {
             />
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2">
             <span>💡 Tip: Paste this directly into Meta Ads Manager, WhatsApp groups, or social posts!</span>
-            <a
-              href="https://grabber-pos.vercel.app/store/main-store"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sky-400 hover:underline font-semibold"
-            >
-              View Live Storefront →
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/api/store/main-store/feed/google"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-400 hover:underline font-semibold"
+              >
+                Google feed
+              </a>
+              <a
+                href="/api/store/main-store/feed/meta"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-400 hover:underline font-semibold"
+              >
+                Meta feed
+              </a>
+              <a
+                href="https://grabber-pos.vercel.app/store/main-store"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-400 hover:underline font-semibold"
+              >
+                View Live Storefront →
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -77,9 +77,9 @@ Each product card shows its price, wholesale price, and a stock badge
 The **Bulk catalog** bar at the top of Products handles large catalogs:
 
 - **Import Excel / CSV** — upload a spreadsheet to add or update products in bulk.
-  It accepts the legacy Easy POS exports (grocery, pharmacy, bookshop, hardware)
-  as-is — column headers are matched automatically, and products already in the
-  catalog are matched **by barcode** and updated (so re-importing is safe).
+  Grocery, pharmacy, bookshop, and hardware column layouts are accepted —
+  headers are matched automatically, and products already in the catalog are
+  matched **by barcode** and updated (so re-importing is safe).
   You'll see a summary: how many were added, updated, or skipped.
 - **Export Excel** — download your whole catalog as an `.xlsx`.
 - **Download template** — a blank spreadsheet with the right columns and two

@@ -1,6 +1,19 @@
 import { create } from "zustand";
 import type { CartLine, Product } from "@/lib/types";
 
+/** Shape compatible with held-bills-store HeldBill for restore. */
+export interface HeldBillSnapshot {
+  isWholesale: boolean;
+  serviceCharge: number;
+  finalDiscount: number;
+  customerName: string;
+  customerMobile: string;
+  employee: string;
+  customerId: string | null;
+  customerPoints: number;
+  lines: CartLine[];
+}
+
 interface CartState {
   lines: CartLine[];
   isWholesale: boolean;
@@ -15,10 +28,20 @@ interface CartState {
   redeemPoints: number;
 
   addProduct: (product: Product) => void;
+  addCustomLine: (input: {
+    name: string;
+    unitPrice: number;
+    quantity?: number;
+  }) => void;
   setQuantity: (productId: string, quantity: number) => void;
   setDiscount: (productId: string, discount: number) => void;
+  /** Override unit price. Custom lines free; stock lines update retail or wholesale. */
+  setUnitPrice: (productId: string, price: number) => void;
+  setSerial: (productId: string, serial: string) => void;
+  setLineModifiers: (productId: string, modifiers: string[]) => void;
   remove: (productId: string) => void;
   clear: () => void;
+  restoreFromHeld: (bill: HeldBillSnapshot) => void;
 
   setWholesale: (on: boolean) => void;
   setServiceCharge: (v: number) => void;
@@ -46,6 +69,20 @@ export function effectivePrice(line: CartLine, isWholesale: boolean): number {
   return isWholesale && line.wholesalePrice != null
     ? line.wholesalePrice
     : line.unitPrice;
+}
+
+/** Catalog (pre-override) price for the current mode. */
+export function catalogPrice(line: CartLine, isWholesale: boolean): number {
+  if (isWholesale && line.catalogWholesalePrice != null) {
+    return line.catalogWholesalePrice;
+  }
+  return line.catalogUnitPrice ?? line.unitPrice;
+}
+
+/** True when stock line unit price was changed from catalog. */
+export function isPriceOverridden(line: CartLine, isWholesale: boolean): boolean {
+  if (line.custom) return false;
+  return Math.abs(effectivePrice(line, isWholesale) - catalogPrice(line, isWholesale)) > 0.001;
 }
 
 export const useCartStore = create<CartState>((set) => ({
@@ -77,10 +114,32 @@ export const useCartStore = create<CartState>((set) => ({
         name: product.name,
         unitPrice: product.salePrice,
         wholesalePrice: product.wholesalePrice,
+        catalogUnitPrice: product.salePrice,
+        catalogWholesalePrice: product.wholesalePrice,
         quantity: 1,
         discount: clampDiscount(product.singleDiscount, product.maxDiscount),
         maxDiscount: product.maxDiscount,
         available: product.quantity,
+      };
+      return { lines: [...state.lines, line] };
+    }),
+
+  addCustomLine: ({ name, unitPrice, quantity = 1 }) =>
+    set((state) => {
+      const id = `CUSTOM-${Date.now().toString(36).toUpperCase()}`;
+      const price = Math.max(0, unitPrice);
+      const line: CartLine = {
+        productId: id,
+        name: name.trim() || "Custom item",
+        unitPrice: price,
+        wholesalePrice: null,
+        catalogUnitPrice: price,
+        catalogWholesalePrice: null,
+        quantity: Math.max(1, Math.floor(quantity) || 1),
+        discount: 0,
+        maxDiscount: 0,
+        available: 9999,
+        custom: true,
       };
       return { lines: [...state.lines, line] };
     }),
@@ -104,6 +163,39 @@ export const useCartStore = create<CartState>((set) => ({
       ),
     })),
 
+  setUnitPrice: (productId, price) =>
+    set((state) => {
+      const next = Math.max(0, Number(price) || 0);
+      return {
+        lines: state.lines.map((l) => {
+          if (l.productId !== productId) return l;
+          // Custom: free override of unitPrice (no max).
+          if (l.custom) return { ...l, unitPrice: next };
+          // Stock: override the price used by the current mode.
+          if (state.isWholesale && l.wholesalePrice != null) {
+            return { ...l, wholesalePrice: next };
+          }
+          return { ...l, unitPrice: next };
+        }),
+      };
+    }),
+
+  setSerial: (productId, serial) =>
+    set((state) => ({
+      lines: state.lines.map((l) =>
+        l.productId === productId ? { ...l, serial: serial.trim() } : l,
+      ),
+    })),
+
+  setLineModifiers: (productId, modifiers) =>
+    set((state) => ({
+      lines: state.lines.map((l) =>
+        l.productId === productId
+          ? { ...l, modifiers: modifiers.filter(Boolean) }
+          : l,
+      ),
+    })),
+
   remove: (productId) =>
     set((state) => ({
       lines: state.lines.filter((l) => l.productId !== productId),
@@ -119,6 +211,20 @@ export const useCartStore = create<CartState>((set) => ({
       employee: "",
       customerId: null,
       customerPoints: 0,
+      redeemPoints: 0,
+    }),
+
+  restoreFromHeld: (bill) =>
+    set({
+      lines: bill.lines.map((l) => ({ ...l })),
+      isWholesale: bill.isWholesale,
+      serviceCharge: bill.serviceCharge,
+      finalDiscount: bill.finalDiscount,
+      customerName: bill.customerName,
+      customerMobile: bill.customerMobile,
+      employee: bill.employee,
+      customerId: bill.customerId,
+      customerPoints: bill.customerPoints,
       redeemPoints: 0,
     }),
 

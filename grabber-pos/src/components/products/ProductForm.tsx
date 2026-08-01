@@ -57,7 +57,9 @@ export function ProductForm({
 }: ProductFormProps) {
   const [form, setForm] = useState<FormState>(toForm(product));
   const [pending, setPending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   // Reset when the target product changes.
   const [lastId, setLastId] = useState<string | null>(product?.id ?? null);
@@ -69,6 +71,34 @@ export function ProductForm({
 
   function set<K extends keyof FormState>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function uploadImage() {
+    if (!file) {
+      setError("Choose an image file first");
+      return;
+    }
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/products/image", {
+        method: "POST",
+        body: fd,
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setError(json.error ?? "Upload failed");
+        return;
+      }
+      set("imageUrl", json.data.url);
+      setFile(null);
+    } catch {
+      setError("Could not upload image");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -172,7 +202,7 @@ export function ProductForm({
                   <input
                     value={form.imageUrl}
                     onChange={(e) => set("imageUrl", e.target.value)}
-                    placeholder="https://…"
+                    placeholder="https://… or upload below"
                     className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"
                   />
                   {form.imageUrl && (
@@ -183,6 +213,22 @@ export function ProductForm({
                       className="h-11 w-11 shrink-0 rounded object-cover"
                     />
                   )}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    className="text-xs text-text-dim file:mr-2 file:rounded file:border file:border-line file:bg-surface-2 file:px-2 file:py-1 file:text-text-body"
+                  />
+                  <button
+                    type="button"
+                    disabled={uploading || !file}
+                    onClick={() => void uploadImage()}
+                    className="rounded-lg border border-line px-3 py-1.5 text-xs text-text-body transition hover:border-accent hover:text-accent disabled:opacity-40"
+                  >
+                    {uploading ? "Uploading…" : "Upload"}
+                  </button>
                 </div>
               </label>
             </div>

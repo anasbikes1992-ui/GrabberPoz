@@ -39,6 +39,8 @@ export const VERTICAL_KEYS = [
   "rent",
   "hire",
   "play",
+  "layaway",
+  "click-collect",
 ];
 
 /** The lean Starter set (core POS + basics). */
@@ -53,12 +55,14 @@ export const STARTER_KEYS = [
   "reports",
   "settings",
   "alerts",
+  // Cashier ops available on every paid plan.
+  "register",
   // Reseller console stays reachable on every plan so lowering a client's
   // plan can never lock the operator out of the licensing controls.
   "admin",
   "clients",
   // In-app help must reach every client, whatever they pay.
-  "updates",
+  "help",
 ];
 
 /** Resolve the enabled module keys for a plan (+ per-client extras). */

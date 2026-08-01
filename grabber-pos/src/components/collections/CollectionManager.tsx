@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { COLLECTIONS, type FieldDef } from "@/lib/collections";
 import { formatMoney } from "@/lib/format";
 import { ModuleHeader } from "@/components/shell/ModuleHeader";
+import { Button } from "@/components/ui/Button";
+import { EmptyState, SkeletonRows } from "@/components/ui/EmptyState";
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -57,47 +59,64 @@ export function CollectionManager({ name }: { name: string }) {
         title={config.plural}
         subtitle={`${rows.length} ${config.plural.toLowerCase()}`}
         actions={
-          <button
+          <Button
+            type="button"
             onClick={() => {
               setEditing(null);
               setFormOpen(true);
             }}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
           >
-            + Add {config.singular.toLowerCase()}
-          </button>
+            Add {config.singular.toLowerCase()}
+          </Button>
         }
       />
 
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder={`Search ${config.plural.toLowerCase()}…`}
-        className="mt-6 w-full rounded-lg border border-line bg-surface-1 px-4 py-2.5 text-sm text-text-strong outline-none transition focus:border-accent"
-      />
+      <label className="mt-6 block">
+        <span className="sr-only">Search {config.plural}</span>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Search ${config.plural.toLowerCase()}…`}
+          className="w-full rounded-xl border border-line bg-surface-1 px-4 py-2.5 text-sm text-text-strong outline-none transition focus:border-accent"
+        />
+      </label>
 
       {loading && rows.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-text-dim">Loading…</p>
+        <SkeletonRows count={6} />
       ) : filtered.length === 0 ? (
-        <p className="mt-10 rounded-xl border border-dashed border-line p-10 text-center text-sm text-text-dim">
-          No {config.plural.toLowerCase()} yet. Add one to get started.
-        </p>
+        <EmptyState
+          title={term ? `No matches for “${search.trim()}”` : `No ${config.plural.toLowerCase()} yet`}
+          body={
+            term
+              ? "Try another search term."
+              : `Add your first ${config.singular.toLowerCase()} to start using this module.`
+          }
+          actionLabel={term ? undefined : `Add ${config.singular.toLowerCase()}`}
+          onAction={
+            term
+              ? undefined
+              : () => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }
+          }
+        />
       ) : (
-        <div className="mt-5 overflow-hidden rounded-xl border border-line bg-surface-1">
-          <table className="w-full text-sm" aria-label="Collection records">
+        <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-surface-1/95">
+          <table className="w-full text-sm" aria-label={`${config.plural} records`}>
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-text-dim">
+              <tr className="border-b border-line text-left text-xs font-medium text-text-dim">
                 {listFields.map((f) => (
-                  <th key={f.key} className="px-5 py-3 font-medium">
+                  <th key={f.key} className="px-5 py-3">
                     {f.label}
                   </th>
                 ))}
-                <th className="px-5 py-3 text-right font-medium">Actions</th>
+                <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {filtered.map((row) => (
-                <tr key={row.id} className="transition-colors hover:bg-surface-2">
+                <tr key={row.id} className="transition-colors hover:bg-surface-2/80">
                   {listFields.map((f) => (
                     <td key={f.key} className="px-5 py-3 text-text-body">
                       {formatValue(row[f.key], f)}
@@ -105,21 +124,25 @@ export function CollectionManager({ name }: { name: string }) {
                   ))}
                   <td className="px-5 py-3 text-right">
                     <div className="flex justify-end gap-1.5">
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setEditing(row);
                           setFormOpen(true);
                         }}
-                        className="rounded-lg border border-line px-2.5 py-1.5 text-xs text-text-dim transition hover:border-accent hover:text-accent"
                       >
                         Edit
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
                         onClick={() => remove(row)}
-                        className="rounded-lg border border-line px-2.5 py-1.5 text-xs text-text-dim transition hover:border-danger hover:text-danger"
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

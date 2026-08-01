@@ -8,8 +8,10 @@ import {
 import {
   listSales,
   createSale as persistSale,
+  voidSale as persistVoidSale,
   salesStats,
 } from "@/lib/server/sales-repo";
+import { writeAudit } from "@/lib/server/audit-store";
 import type { Sale, SaleLine } from "@/lib/types";
 import type {
   PosRepository,
@@ -46,6 +48,10 @@ export class LocalRepository implements PosRepository {
     return salesStats();
   }
 
+  async voidSale(id: string, reason: string, actor?: string): Promise<Sale> {
+    return persistVoidSale(id, reason, actor);
+  }
+
   async createSale(input: CreateSaleInput): Promise<Sale> {
     if (!input.lines?.length) throw new Error("Sale must contain a line");
 
@@ -54,7 +60,34 @@ export class LocalRepository implements PosRepository {
 
     const lines: SaleLine[] = [];
     for (const l of input.lines) {
-      const product = findById(l.productId);
+      const isCustom =
+        !!l.custom || l.productId.startsWith("CUSTOM");
+
+      if (isCustom) {
+        const name = (l.name ?? "").trim() || "Custom item";
+        const unitPrice = Math.max(0, Number(l.unitPrice) || 0);
+        if (!Number.isInteger(l.quantity) || l.quantity <= 0) {
+          throw new Error(`Invalid quantity for ${name}`);
+        }
+        const discount = Number(l.discount) || 0;
+        lines.push({
+          productId: l.productId,
+          name,
+          unitPrice,
+          quantity: l.quantity,
+          discount,
+          lineTotal: (unitPrice - discount) * l.quantity,
+          serial: l.serial,
+          modifiers: l.modifiers,
+        });
+        continue;
+      }
+
+      // Variant lines use synthetic id `parentId:variantSku`.
+      const colon = l.productId.indexOf(":");
+      const lookupId =
+        colon > 0 ? l.productId.slice(0, colon) : l.productId;
+      const product = findById(lookupId);
       if (!product) throw new Error(`Unknown product: ${l.productId}`);
       if (!Number.isInteger(l.quantity) || l.quantity <= 0) {
         throw new Error(`Invalid quantity for ${product.name}`);
@@ -65,17 +98,27 @@ export class LocalRepository implements PosRepository {
           `Discount for ${product.name} exceeds max (${product.maxDiscount})`,
         );
       }
-      const unitPrice =
+      const catalogPrice =
         useWholesale && product.wholesalePrice
           ? product.wholesalePrice
           : product.salePrice;
+      // Allow manager price override / variant price from the terminal.
+      const unitPrice =
+        l.unitPrice != null && !Number.isNaN(Number(l.unitPrice))
+          ? Math.max(0, Number(l.unitPrice))
+          : catalogPrice;
+      const displayName =
+        (l.name ?? "").trim() ||
+        (colon > 0 ? `${product.name} (${l.productId.slice(colon + 1)})` : product.name);
       lines.push({
-        productId: product.id,
-        name: product.name,
+        productId: l.productId,
+        name: displayName,
         unitPrice,
         quantity: l.quantity,
         discount,
         lineTotal: (unitPrice - discount) * l.quantity,
+        serial: l.serial,
+        modifiers: l.modifiers,
       });
     }
 
@@ -89,13 +132,38 @@ export class LocalRepository implements PosRepository {
     }
     const total = afterLines - finalDiscount + serviceCharge;
 
-    const cashReceived =
-      input.paymentMethod === "cash" ? Number(input.cashReceived) || 0 : null;
-    if (input.paymentMethod === "cash" && (cashReceived ?? 0) < total) {
-      throw new Error("Cash received is less than the total");
+    let cashReceived: number | null = null;
+    let change: number | null = null;
+    let cashAmount: number | null = null;
+    let cardAmount: number | null = null;
+
+    if (input.paymentMethod === "split") {
+      cashAmount = Math.max(0, Number(input.cashAmount) || 0);
+      cardAmount = Math.max(0, Number(input.cardAmount) || 0);
+      const tendered = cashAmount + cardAmount;
+      if (tendered + 0.01 < total) {
+        throw new Error(
+          `Split tender (${tendered.toFixed(2)}) is less than total (${total.toFixed(2)})`,
+        );
+      }
+      // Require roughly summing to total (tolerance 0.01) unless overpay on cash
+      if (tendered - total > 0.01 && cardAmount > total) {
+        throw new Error("Split amounts must roughly equal the total");
+      }
+      cashReceived = cashAmount;
+      change = tendered > total ? Number((tendered - total).toFixed(2)) : 0;
+    } else if (input.paymentMethod === "cash") {
+      cashReceived = Number(input.cashReceived) || 0;
+      if (cashReceived < total) {
+        throw new Error("Cash received is less than the total");
+      }
+      change = cashReceived - total;
+      cashAmount = cashReceived;
+    } else if (input.paymentMethod === "card") {
+      cardAmount = total;
     }
 
-    return persistSale({
+    const sale = await persistSale({
       lines,
       subtotal,
       discountTotal,
@@ -108,7 +176,48 @@ export class LocalRepository implements PosRepository {
       customerMobile: input.customerMobile?.trim() || null,
       employee: input.employee?.trim() || null,
       cashReceived,
-      change: cashReceived != null ? cashReceived - total : null,
+      change,
+      status: "completed",
+      cashAmount,
+      cardAmount,
     });
+
+    try {
+      const { recordSaleOnShift } = await import("@/lib/server/register-store");
+      const emp = input.employee?.trim() || "";
+      const isTraining = emp.startsWith("[TRAINING]");
+      if (!isTraining) {
+        await recordSaleOnShift({
+          id: sale.id,
+          total: sale.total,
+          paymentMethod: sale.paymentMethod,
+          cashReceived: sale.cashReceived,
+        });
+      }
+    } catch {
+      // Non-fatal if no open shift.
+    }
+
+    try {
+      const { logFiscalEvent } = await import("@/lib/server/fiscal-stub");
+      await logFiscalEvent({
+        id: sale.id,
+        total: sale.total,
+        paymentMethod: sale.paymentMethod,
+        employee: input.employee,
+      });
+    } catch {
+      // Non-fatal fiscal stub
+    }
+
+    await writeAudit({
+      actor: input.employee?.trim() || "cashier",
+      action: "sale.create",
+      entity: "sale",
+      entityId: sale.id,
+      detail: `${sale.paymentMethod} · ${sale.total}`,
+    });
+
+    return sale;
   }
 }

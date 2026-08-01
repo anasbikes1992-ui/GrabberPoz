@@ -3,5 +3,5 @@
 import { CollectionManager } from "@/components/collections/CollectionManager";
 
 export default function JobsPage() {
-  return <CollectionManager name="addjobs" />;
+  return <CollectionManager name="jobs" />;
 }

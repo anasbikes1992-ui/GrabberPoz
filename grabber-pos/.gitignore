@@ -47,3 +47,10 @@ next-env.d.ts
 
 # supabase CLI scratch state (project ref, versions)
 supabase/.temp/
+
+# IDE / agent
+.cursor/
+
+# Secrets and local uploads (never commit)
+docs/CREDENTIALS.md
+/public/uploads/

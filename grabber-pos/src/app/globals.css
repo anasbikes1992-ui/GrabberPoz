@@ -1,20 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --surface-0: oklch(16% 0.012 260);
-  --surface-1: oklch(20% 0.014 260);
-  --surface-2: oklch(24% 0.016 260);
-  --surface-3: oklch(29% 0.018 260);
-  --line: oklch(32% 0.02 260);
-  --text-strong: oklch(96% 0.005 260);
-  --text: oklch(82% 0.01 260);
-  --text-dim: oklch(62% 0.012 260);
-  --accent: oklch(76% 0.16 160);
-  --accent-strong: oklch(66% 0.17 160);
-  --accent-ink: oklch(20% 0.05 160);
+  --surface-0: oklch(15% 0.014 165);
+  --surface-1: oklch(19% 0.016 165);
+  --surface-2: oklch(23% 0.018 165);
+  --surface-3: oklch(28% 0.02 165);
+  --line: oklch(34% 0.022 165);
+  --text-strong: oklch(97% 0.006 95);
+  --text: oklch(84% 0.012 95);
+  --text-dim: oklch(64% 0.014 165);
+  --accent: oklch(78% 0.15 155);
+  --accent-strong: oklch(68% 0.16 155);
+  --accent-ink: oklch(18% 0.04 155);
   --warn: oklch(80% 0.14 85);
   --danger: oklch(66% 0.2 25);
-  --info: oklch(72% 0.12 250);
+  --info: oklch(72% 0.11 230);
+  --glow: oklch(55% 0.12 155 / 0.18);
+  --glow-cool: oklch(45% 0.08 230 / 0.12);
 }
 
 @theme inline {
@@ -39,9 +41,14 @@
 html,
 body {
   height: 100%;
-  background: var(--surface-0);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--glow), transparent 55%),
+    radial-gradient(900px 500px at 95% 5%, var(--glow-cool), transparent 50%),
+    var(--surface-0);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, sans-serif;
+  letter-spacing: -0.011em;
 }
 
 /* Screen-reader only / skip-link target helpers (WCAG 2.4.1) */
@@ -76,6 +83,16 @@ body {
   transform: translateY(0);
   outline: 2px solid var(--text-strong);
   outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--accent) 35%, transparent);
+  color: var(--text-strong);
 }
 
 ::-webkit-scrollbar {

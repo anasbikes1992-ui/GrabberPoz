@@ -35,7 +35,7 @@ settings.
 enforcement, a client onboarding wizard and a super-admin console.
 
 Key screens: `/` launcher · `/pos` terminal · `/dashboard` · `/sales` ·
-`/admin` super-admin · `/api/health` readiness probe.
+`/admin` super-admin · `/welcome` overview · `/api/health` readiness probe.
 
 ## Key design points
 
@@ -56,6 +56,7 @@ Key screens: `/` launcher · `/pos` terminal · `/dashboard` · `/sales` ·
 | Doc | For |
 |-----|-----|
 | [PRODUCTION.md](docs/PRODUCTION.md) | **Going live** — migrations, env, go-live checklist, security |
+| [CREDENTIALS.md](docs/CREDENTIALS.md) | What to paste into `.env.local` (no secrets in repo) |
 | [SETUP.md](docs/SETUP.md) | Local development setup |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, the two seams, trust boundaries |
 | [DATA-MODEL.md](docs/DATA-MODEL.md) | Schema, RPCs, RLS, legacy mapping |
@@ -63,6 +64,9 @@ Key screens: `/` launcher · `/pos` terminal · `/dashboard` · `/sales` ·
 | [USER-GUIDE.md](docs/USER-GUIDE.md) | Day-to-day use, for staff |
 | [RESELLER-GUIDE.md](docs/RESELLER-GUIDE.md) | Selling and delivering it to clients |
 | [FEATURE-PLAN.md](docs/FEATURE-PLAN.md) | Module inventory + roadmap |
+| [PRODUCT-GAP.md](docs/PRODUCT-GAP.md) | Gaps, missed ideas, sprint order |
+| [PRODUCT.md](PRODUCT.md) | Product truth (users, principles) |
+| [DESIGN.md](DESIGN.md) | Visual design system |
 
 ## Scripts
 

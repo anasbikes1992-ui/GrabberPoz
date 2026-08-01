@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { SETTINGS_SECTIONS } from "@/lib/settings";
 import { ModuleHeader } from "@/components/shell/ModuleHeader";
+import { PrinterTestPanel } from "@/components/settings/PrinterTestPanel";
+import { Button } from "@/components/ui/Button";
+import { SkeletonRows } from "@/components/ui/EmptyState";
 
 type Form = Record<string, string>;
+
+const fieldClass =
+  "w-full rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-text-strong outline-none transition duration-150 focus:border-accent";
 
 export default function SettingsPage() {
   const [form, setForm] = useState<Form>({});
@@ -55,32 +61,28 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-8">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         <ModuleHeader title="Settings" subtitle="Business, receipt, tax & printers" />
-        <p className="mt-10 text-center text-sm text-text-dim">Loading…</p>
+        <SkeletonRows count={6} />
       </div>
     );
   }
 
   return (
-    <form onSubmit={save} className="mx-auto max-w-3xl px-6 py-8">
+    <form onSubmit={save} className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
       <ModuleHeader
         title="Settings"
         subtitle="Business, receipt, tax & printers"
         actions={
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong disabled:opacity-50"
-          >
+          <Button type="submit" disabled={saving}>
             {saving ? "Saving…" : "Save changes"}
-          </button>
+          </Button>
         }
       />
 
       {msg && (
         <p
-          className={`mt-6 rounded-lg border px-4 py-2 text-sm ${
+          className={`mt-6 rounded-xl border px-4 py-2 text-sm ${
             msg.ok
               ? "border-accent/40 bg-accent/10 text-accent"
               : "border-danger/40 bg-danger/10 text-danger"
@@ -90,30 +92,30 @@ export default function SettingsPage() {
         </p>
       )}
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-4">
         {SETTINGS_SECTIONS.map((section, i) => (
           <motion.section
             key={section.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="rounded-xl border border-line bg-surface-1 p-5"
+            transition={{ delay: i * 0.04, duration: 0.3 }}
+            className="rounded-2xl border border-line bg-surface-1 p-5"
           >
-            <h2 className="mb-4 text-sm font-medium text-text-strong">
+            <h2 className="mb-4 text-sm font-semibold text-text-strong">
               {section.label}
             </h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {section.fields.map((f) => (
                 <label
                   key={f.key}
-                  className={`text-sm ${f.full || f.type === "textarea" ? "col-span-2" : ""}`}
+                  className={`text-sm ${f.full || f.type === "textarea" ? "sm:col-span-2" : ""}`}
                 >
                   <span className="mb-1 block text-text-dim">{f.label}</span>
                   {f.type === "select" ? (
                     <select
                       value={form[f.key] ?? ""}
                       onChange={(e) => set(f.key, e.target.value)}
-                      className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"
+                      className={fieldClass}
                     >
                       {f.options?.map((o) => (
                         <option key={o} value={o}>
@@ -126,14 +128,14 @@ export default function SettingsPage() {
                       value={form[f.key] ?? ""}
                       onChange={(e) => set(f.key, e.target.value)}
                       rows={2}
-                      className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"
+                      className={fieldClass}
                     />
                   ) : (
                     <input
                       type={f.type === "number" ? "number" : f.type === "email" ? "email" : "text"}
                       value={form[f.key] ?? ""}
                       onChange={(e) => set(f.key, e.target.value)}
-                      className="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-text-strong outline-none focus:border-accent"
+                      className={fieldClass}
                     />
                   )}
                 </label>
@@ -141,6 +143,16 @@ export default function SettingsPage() {
             </div>
           </motion.section>
         ))}
+        <PrinterTestPanel />
+        <section className="rounded-2xl border border-line bg-surface-1 p-5">
+          <h2 className="mb-2 text-sm font-semibold text-text-strong">
+            Fiscal / e-invoice
+          </h2>
+          <p className="text-sm text-text-dim">
+            Fiscal provider: stub — sales are logged to the audit trail. Swap
+            the stub for a live provider when ready.
+          </p>
+        </section>
       </div>
     </form>
   );

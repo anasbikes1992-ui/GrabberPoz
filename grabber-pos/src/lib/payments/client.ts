@@ -10,7 +10,7 @@
  * verification happen server-side in the edge functions.
  *
  * This file is the single source of truth. `sync-payments.ps1` copies it into:
- *   MyPoz\grabber-pos\src\lib\payments\
+ *   grabber-pos\src\lib\payments\
  *   Grabber Jarvis Consultant\src\lib\payments\
  *   PEARL-HUB-PRO-main\src\lib\payments\
  * Do not edit the copies â€” edit here and re-run the sync.

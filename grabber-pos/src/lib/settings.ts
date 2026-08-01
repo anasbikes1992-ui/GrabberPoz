@@ -31,13 +31,22 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     label: "Tax",
     fields: [
-      { key: "taxPercent", label: "Tax / VAT %", type: "number" },
+      { key: "taxPercent", label: "Tax / VAT % (default)", type: "number" },
+      { key: "taxRateA", label: "Tax rate A %", type: "number" },
+      { key: "taxRateB", label: "Tax rate B %", type: "number" },
       { key: "taxInclusive", label: "Prices include tax", type: "select", options: ["Yes", "No"] },
+    ],
+  },
+  {
+    label: "Training",
+    fields: [
+      { key: "trainingMode", label: "Training mode", type: "select", options: ["Yes", "No"] },
     ],
   },
   {
     label: "Printers (ESC/POS over TCP)",
     fields: [
+      { key: "printerReceiptIp", label: "Receipt printer IP", type: "text" },
       { key: "printerKotIp", label: "KOT printer IP", type: "text" },
       { key: "printerBotIp", label: "BOT printer IP", type: "text" },
     ],
@@ -81,7 +90,11 @@ export const settingsSchema = z.object({
   paperWidth: z.enum(["80mm", "58mm"]).default("80mm"),
   showQr: z.enum(["Yes", "No"]).default("No"),
   taxPercent: z.coerce.number().min(0).max(100).default(0),
+  taxRateA: z.coerce.number().min(0).max(100).default(0),
+  taxRateB: z.coerce.number().min(0).max(100).default(0),
   taxInclusive: z.enum(["Yes", "No"]).default("Yes"),
+  trainingMode: z.enum(["Yes", "No"]).default("No"),
+  printerReceiptIp: z.string().max(60).default(""),
   printerKotIp: z.string().max(60).default(""),
   printerBotIp: z.string().max(60).default(""),
   whatsappCountryCode: z.string().max(5).default("94"),

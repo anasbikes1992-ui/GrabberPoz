@@ -114,6 +114,28 @@ export class SupabaseRepository implements PosRepository {
     if (error) throw new Error(error.message);
     return mapSaleRow(data as SaleRpcRow);
   }
+
+  async voidSale(id: string, reason: string, _actor?: string): Promise<Sale> {
+    const { data, error } = await this.db
+      .from("sales")
+      .update({
+        status: "voided",
+        // columns may not exist on all schemas — best-effort
+      } as Record<string, unknown>)
+      .eq("id", id)
+      .select(
+        "id, receipt_no, created_at, subtotal, discount_total, final_discount, service_charge, total, payment_method, customer_name, customer_mobile, employee, cash_received, change_due, sale_lines(product_id, name, unit_price, quantity, discount, line_total)",
+      )
+      .maybeSingle();
+    if (error) {
+      throw new Error(
+        `Void sale failed in durable mode: ${error.message}. Reason recorded: ${reason}`,
+      );
+    }
+    if (!data) throw new Error("Sale not found");
+    const sale = mapSaleRow(data as SaleRpcRow);
+    return { ...sale, status: "voided", voidReason: reason, voidedAt: new Date().toISOString() };
+  }
 }
 
 interface SaleRpcRow {
@@ -131,6 +153,9 @@ interface SaleRpcRow {
   employee?: string | null;
   cash_received: number | null;
   change_due: number | null;
+  status?: string | null;
+  void_reason?: string | null;
+  voided_at?: string | null;
   lines?: RawLine[];
   sale_lines?: RawLine[];
 }
@@ -161,6 +186,9 @@ function mapSaleRow(row: SaleRpcRow): Sale {
     employee: row.employee ?? null,
     cashReceived: row.cash_received != null ? Number(row.cash_received) : null,
     change: row.change_due != null ? Number(row.change_due) : null,
+    status: (row.status as Sale["status"]) ?? "completed",
+    voidReason: row.void_reason ?? null,
+    voidedAt: row.voided_at ?? null,
     lines: rawLines.map((l) => ({
       productId: l.product_id ?? "",
       name: l.name,

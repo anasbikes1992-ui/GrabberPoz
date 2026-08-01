@@ -22,18 +22,28 @@ export interface Product {
 export interface CartLine {
   productId: string;
   name: string;
-  /** Retail unit price. */
+  /** Retail unit price (may be overridden). */
   unitPrice: number;
-  /** Wholesale unit price, if the product has one. */
+  /** Wholesale unit price, if the product has one (may be overridden). */
   wholesalePrice: number | null;
+  /** Catalog retail price at add-time (for override detection). */
+  catalogUnitPrice?: number;
+  /** Catalog wholesale price at add-time (for override detection). */
+  catalogWholesalePrice?: number | null;
   quantity: number;
   /** Per-unit discount amount (LKR), capped at product.maxDiscount */
   discount: number;
   maxDiscount: number;
   available: number;
+  /** Optional serial / IMEI for electronics. */
+  serial?: string;
+  /** Non-stock / ad-hoc line. */
+  custom?: boolean;
+  /** Restaurant-style modifiers. */
+  modifiers?: string[];
 }
 
-export type PaymentMethod = "cash" | "card" | "wholesale";
+export type PaymentMethod = "cash" | "card" | "wholesale" | "split";
 
 export interface SaleLine {
   productId: string;
@@ -42,6 +52,8 @@ export interface SaleLine {
   quantity: number;
   discount: number;
   lineTotal: number;
+  serial?: string;
+  modifiers?: string[];
 }
 
 export interface Sale {
@@ -64,6 +76,11 @@ export interface Sale {
   employee: string | null;
   cashReceived: number | null;
   change: number | null;
+  status?: "completed" | "voided";
+  voidReason?: string | null;
+  voidedAt?: string | null;
+  cashAmount?: number | null;
+  cardAmount?: number | null;
 }
 
-export type TicketStation = "KOT" | "BOT" | "RECEIPT";
+export type TicketStation = "KOT" | "BOT" | "RECEIPT" | "DRAWER";

@@ -19,6 +19,11 @@ export interface SaleLineInput {
   productId: string;
   quantity: number;
   discount: number;
+  name?: string;
+  unitPrice?: number;
+  serial?: string;
+  modifiers?: string[];
+  custom?: boolean;
 }
 
 export interface CreateSaleInput {
@@ -31,6 +36,9 @@ export interface CreateSaleInput {
   customerMobile?: string;
   employee?: string;
   cashReceived?: number;
+  cashAmount?: number;
+  cardAmount?: number;
+  managerPin?: string;
   /** Device-generated idempotency key (offline-safe retries). */
   clientUuid?: string;
 }
@@ -61,5 +69,10 @@ export interface PosRepository {
 
   listSales(limit?: number): Promise<Sale[]>;
   createSale(input: CreateSaleInput): Promise<Sale>;
+  voidSale(
+    id: string,
+    reason: string,
+    actor?: string,
+  ): Promise<Sale>;
   salesStats(): Promise<SalesStats>;
 }

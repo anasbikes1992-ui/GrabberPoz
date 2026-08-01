@@ -2,8 +2,8 @@
 
 **By Grabber Mobility Solutions (Pvt) Ltd**
 
-A modern, multi-tenant point-of-sale platform — a complete rebuild of the legacy
-"Easy POS" system (hosted PHP + Electron shell) on a durable, scalable stack.
+A modern, multi-tenant point-of-sale platform on a durable, scalable stack —
+web terminal, Flutter companion, and Supabase backend.
 
 The solution has three parts that share one backend:
 
@@ -54,7 +54,9 @@ flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
 - [**Feature & Build Plan**](grabber-pos/docs/FEATURE-PLAN.md) — every module, tile,
   setting, and CRUD screen to reach full legacy parity (visual version:
   `grabber-pos/docs/build-plan.html`)
+- [**Product gap & ideas**](grabber-pos/docs/PRODUCT-GAP.md) — what to finish next
 - [Architecture](grabber-pos/docs/ARCHITECTURE.md) — how the pieces fit
+- [Product](grabber-pos/PRODUCT.md) · [Design](grabber-pos/DESIGN.md) — product & visual truth
 - [Setup](grabber-pos/docs/SETUP.md) — provisioning Supabase + running both apps
 - [Data model](grabber-pos/docs/DATA-MODEL.md) — schema, RLS, and RPCs
 - [Deployment](grabber-pos/docs/DEPLOYMENT.md) — production checklist
@@ -70,10 +72,10 @@ flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
 - Backend: four SQL migrations + seed script (apply to a Supabase project to go
   from demo to durable).
 
-## Legacy migration
+## Catalog migration
 
-The old system stored catalog data in Excel/CSV exports (grocery, pharmacy,
-bookshop, hardware). The normalized grocery dataset is already seeded; the seed
-script (`grabber-pos/scripts/seed.mjs`) loads it into Supabase. Remaining legacy
-modules (suppliers, purchase orders, reports, user management) are modeled in the
-schema and awaiting the original PHP business rules to port their exact behavior.
+Catalogs can be imported from Excel/CSV (grocery, pharmacy, bookshop, hardware
+layouts). The normalized grocery dataset is already seeded; the seed script
+(`grabber-pos/scripts/seed.mjs`) loads it into Supabase. Remaining modules
+(suppliers, purchase orders, reports, user management) follow the schema and
+business rules documented in `grabber-pos/docs/`.

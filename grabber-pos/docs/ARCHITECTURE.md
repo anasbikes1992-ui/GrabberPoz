@@ -25,10 +25,11 @@ backend ────────────────────────
 src/
 ├── app/                      # Next.js App Router
 │   ├── (app)/                # authenticated shell (sidebar + page transitions)
-│   │   ├── page.tsx          # dashboard
+│   │   ├── page.tsx          # launcher home
 │   │   ├── pos/              # POS terminal
 │   │   ├── inventory/        # product table
 │   │   └── sales/            # sales history
+│   ├── welcome/              # public product overview
 │   ├── login/                # auth screen (Supabase or demo)
 │   └── api/                  # Route Handlers (products, sales, print, health, auth)
 ├── proxy.ts                  # optimistic auth guard (Next 16 renamed middleware→proxy)

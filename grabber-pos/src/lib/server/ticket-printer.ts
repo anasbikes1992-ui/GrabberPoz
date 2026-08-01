@@ -14,13 +14,15 @@ const STATION_ENV: Record<TicketStation, string> = {
   KOT: "PRINTER_KOT_IP",
   BOT: "PRINTER_BOT_IP",
   RECEIPT: "PRINTER_RECEIPT_IP",
+  DRAWER: "PRINTER_RECEIPT_IP",
 };
 
-const STATION_HEADER: Record<TicketStation, string | null> = {
-  KOT: "===== KITCHEN ORDER =====",
-  BOT: "===== BAR ORDER =====",
-  RECEIPT: null,
-};
+const STATION_HEADER: Record<Exclude<TicketStation, "DRAWER">, string | null> =
+  {
+    KOT: "===== KITCHEN ORDER =====",
+    BOT: "===== BAR ORDER =====",
+    RECEIPT: null,
+  };
 
 export interface PrintResult {
   success: boolean;
@@ -50,6 +52,13 @@ export async function printTicket(
       return { success: false, message: `Cannot reach printer at ${ip}` };
     }
     printer.clear();
+
+    if (station === "DRAWER") {
+      printer.openCashDrawer();
+      await printer.execute();
+      return { success: true, message: `Drawer kick sent (${ip})` };
+    }
+
     printer.alignCenter();
     const header = STATION_HEADER[station];
     if (header) {
@@ -66,4 +75,9 @@ export async function printTicket(
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, message: `Print failed: ${message}` };
   }
+}
+
+/** ESC/POS cash-drawer pulse via the receipt printer. */
+export async function kickCashDrawer(): Promise<PrintResult> {
+  return printTicket("DRAWER", "");
 }

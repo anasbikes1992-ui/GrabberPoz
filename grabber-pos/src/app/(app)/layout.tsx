@@ -2,6 +2,8 @@ import { TopBar } from "@/components/shell/TopBar";
 import { PageTransition } from "@/components/shell/PageTransition";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { LicenceBanner } from "@/components/brand/LicenceBanner";
+import { IdleLock } from "@/components/shell/IdleLock";
+import { OfflineSetup } from "@/components/OfflineSetup";
 
 export default function AppLayout({
   children,
@@ -19,6 +21,8 @@ export default function AppLayout({
         <main id="main" className="flex-1" tabIndex={-1}>
           <PageTransition>{children}</PageTransition>
         </main>
+        <IdleLock />
+        <OfflineSetup />
       </div>
     </BrandProvider>
   );

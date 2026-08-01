@@ -4,11 +4,16 @@ export const saleLineSchema = z.object({
   productId: z.string().min(1),
   quantity: z.number().int().positive(),
   discount: z.number().min(0).default(0),
+  name: z.string().max(200).optional(),
+  unitPrice: z.number().min(0).optional(),
+  serial: z.string().max(120).optional(),
+  modifiers: z.array(z.string().max(80)).optional(),
+  custom: z.boolean().optional(),
 });
 
 export const createSaleSchema = z.object({
   lines: z.array(saleLineSchema).min(1, "Sale must contain at least one line"),
-  paymentMethod: z.enum(["cash", "card", "wholesale"]),
+  paymentMethod: z.enum(["cash", "card", "wholesale", "split"]),
   serviceCharge: z.number().min(0).default(0),
   finalDiscount: z.number().min(0).default(0),
   isWholesale: z.boolean().default(false),
@@ -16,6 +21,9 @@ export const createSaleSchema = z.object({
   customerMobile: z.string().max(20).optional(),
   employee: z.string().max(120).optional(),
   cashReceived: z.number().min(0).optional(),
+  cashAmount: z.number().min(0).optional(),
+  cardAmount: z.number().min(0).optional(),
+  managerPin: z.string().max(32).optional(),
   clientUuid: z.string().uuid().optional(),
 });
 

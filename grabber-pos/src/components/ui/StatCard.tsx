@@ -26,19 +26,18 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <motion.article
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3 }}
-      className="rounded-xl border border-line bg-surface-1 p-5"
+      transition={{ delay: index * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-2xl border border-line bg-surface-1/95 p-5"
     >
-      <p className="text-xs font-medium uppercase tracking-wider text-text-dim">
-        {label}
-      </p>
-      <p className={`mt-2 text-2xl font-semibold ${TONE_CLASS[tone]}`}>
+      <p className="text-xs font-medium text-text-dim">{label}</p>
+      <p
+        className={`mt-2 font-mono text-2xl font-semibold tracking-tight ${TONE_CLASS[tone]}`}
+      >
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-text-dim">{hint}</p>}
+      {hint ? <p className="mt-1.5 text-xs text-text-dim">{hint}</p> : null}
     </motion.article>
   );
 }
