@@ -6,7 +6,10 @@
  * so the project still runs out-of-the-box for evaluation and offline dev.
  */
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+/** Anon key; also accepts Supabase Vercel integration's PUBLISHABLE_KEY alias. */
 export const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  "";
 
 export const isSupabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
