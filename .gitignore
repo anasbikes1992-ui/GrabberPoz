@@ -26,5 +26,6 @@ dist/
 .idea/
 .DS_Store
 
-# Local runtime data
-data/
+# Local runtime data (do not ignore app seed dirs like grabber-pos/src/data/)
+/data/
+grabber-pos/data/
