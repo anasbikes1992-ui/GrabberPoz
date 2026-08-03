@@ -145,7 +145,7 @@ function PosWorkspace() {
           <ProductGrid onPick={handlePick} categoryMode={categoryMode} />
         </section>
         <section
-          className="h-[min(52vh,28rem)] w-full shrink-0 lg:h-auto lg:w-96"
+          className="flex min-h-[28rem] w-full shrink-0 flex-col lg:sticky lg:top-4 lg:h-auto lg:min-h-0 lg:w-[26rem] lg:self-stretch"
           aria-label="Bill"
         >
           <BillPanel />

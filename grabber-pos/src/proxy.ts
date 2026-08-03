@@ -26,9 +26,14 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Supabase may chunk cookies as `sb-<ref>-auth-token.0`, `.1`, …
   const hasSupabaseSession = req.cookies
     .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+    .some(
+      (c) =>
+        c.name.startsWith("sb-") &&
+        (c.name.includes("-auth-token") || c.name.includes("auth-token")),
+    );
   const demoRaw = req.cookies.get(DEMO_COOKIE)?.value;
   const hasDemoSession = !isSupabaseEnabled && verifySessionToken(demoRaw);
 
