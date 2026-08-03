@@ -97,20 +97,42 @@ export async function findStorefrontOrderBySaleOrReceipt(
     o.receiptNo === saleId ||
     o.id === saleId;
 
-  // Webhooks have no user session — use service role when Supabase is on.
+  // Webhooks have no user session, so this uses the service role — which
+  // BYPASSES RLS and can therefore see every tenant's orders. We must:
+  //   (a) query precisely, not scan a capped page that could miss the target
+  //       row among many tenants' orders, and
+  //   (b) prefer the globally-unique order id / saleId over the per-branch
+  //       receiptNo (which can collide across organizations), and refuse an
+  //       ambiguous receipt match rather than complete the wrong org's sale.
   if (isSupabaseEnabled && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const { createServiceSupabase } = await import("@/lib/supabase/server");
       const db = createServiceSupabase();
-      const { data, error } = await db
-        .from("app_collections")
-        .select("data")
-        .eq("collection", "storefront-orders")
-        .limit(200);
-      if (!error && data) {
-        for (const row of data) {
-          const o = row.data as unknown as StorefrontWebOrder;
-          if (o && match(o)) return o;
+      // Only values safe to embed in a PostgREST or() filter (no '.', ',', or parens).
+      const safe = (v?: string | null) =>
+        v && /^[A-Za-z0-9:_-]+$/.test(v) ? v : null;
+      const s = safe(saleId);
+      const r = safe(receiptNo);
+      const ors: string[] = [];
+      if (s) {
+        ors.push(`data->>id.eq.${s}`, `data->>saleId.eq.${s}`, `data->>receiptNo.eq.${s}`);
+      }
+      if (r && r !== s) ors.push(`data->>receiptNo.eq.${r}`);
+      if (ors.length) {
+        const { data, error } = await db
+          .from("app_collections")
+          .select("data")
+          .eq("collection", "storefront-orders")
+          .or(ors.join(","))
+          .limit(20);
+        if (!error && data && data.length) {
+          const rows = data.map((row) => row.data as unknown as StorefrontWebOrder);
+          const byUnique = rows.find((o) => o && (o.id === saleId || o.saleId === saleId));
+          if (byUnique) return byUnique;
+          const receiptMatches = rows.filter((o) => o && match(o));
+          if (receiptMatches.length === 1) return receiptMatches[0]!;
+          // Ambiguous receipt across tenants — refuse rather than guess.
+          if (receiptMatches.length > 1) return null;
         }
       }
     } catch {

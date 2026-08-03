@@ -1,5 +1,5 @@
 import "server-only";
-import { isSupabaseEnabled } from "@/lib/supabase/config";
+import { isSupabaseEnabled, requireSupabase } from "@/lib/supabase/config";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { LocalRepository } from "./local";
 import { SupabaseRepository } from "./supabase";
@@ -10,7 +10,17 @@ import type { PosRepository } from "./types";
  * Supabase when configured (and the user has a branch), else the local store.
  */
 export async function getRepository(): Promise<PosRepository> {
-  if (!isSupabaseEnabled) return new LocalRepository();
+  if (!isSupabaseEnabled) {
+    if (requireSupabase) {
+      // Fail loud in production instead of serving the bundled demo store.
+      throw new Error(
+        "Supabase is not configured, but this is a production deploy. Set " +
+          "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or set " +
+          "POS_ALLOW_DEMO=true to intentionally run the local demo store.",
+      );
+    }
+    return new LocalRepository();
+  }
 
   const db = await createServerSupabase();
   const {

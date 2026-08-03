@@ -13,3 +13,17 @@ export const SUPABASE_ANON_KEY =
   "";
 
 export const isSupabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+/**
+ * Production must not silently serve the bundled JSON demo store when Supabase
+ * is missing or unreachable — that risks showing demo data (or a shared local
+ * store) as if it were the tenant's real, isolated data. A production deploy is
+ * therefore required to have Supabase configured, unless the operator opts in to
+ * a demo deploy explicitly with `POS_ALLOW_DEMO=true`.
+ */
+const allowDemoFallback = process.env.POS_ALLOW_DEMO === "true";
+// Skip the guard during `next build` prerender: env may legitimately be absent
+// at build time (it is injected at runtime). The check applies to real requests.
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+export const requireSupabase =
+  process.env.NODE_ENV === "production" && !allowDemoFallback && !isBuildPhase;
