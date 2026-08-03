@@ -90,6 +90,14 @@ async function main() {
     const rows = batch.map((p) => ({
       org_id: org.id,
       sku: p.id,
+      slug:
+        (String(p.name || "product")
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "") || "product") +
+        "-" +
+        String(p.id).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       name: p.name,
       name_local: p.nameLocal ?? null,
       brand: p.brand ?? null,

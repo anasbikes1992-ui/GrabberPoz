@@ -9,9 +9,23 @@ function e(k: string) {
 const STAGING_URL = "https://stagingxpay.info/index.php?route=checkout/billing";
 
 function normalizePem(key: string): string {
-  const trimmed = key.trim().replace(/\\n/g, "\n");
+  let trimmed = key.trim().replace(/\\n/g, "\n");
+  // Vercel / .env often flatten PEM to one line — rebuild a valid PKCS#1/SPKI block.
+  if (!trimmed.includes("\n") && /BEGIN [\w ]+ KEY/.test(trimmed)) {
+    const match = trimmed.match(
+      /-----BEGIN ([\w ]+ KEY)-----([\s\S]+?)-----END \1-----/,
+    );
+    if (match) {
+      const kind = match[1];
+      const body = match[2].replace(/\s+/g, "");
+      const lines = body.match(/.{1,64}/g) ?? [body];
+      trimmed = `-----BEGIN ${kind}-----\n${lines.join("\n")}\n-----END ${kind}-----`;
+    }
+  }
   if (trimmed.includes("BEGIN")) return trimmed;
-  return `-----BEGIN PUBLIC KEY-----\n${trimmed}\n-----END PUBLIC KEY-----`;
+  const body = trimmed.replace(/\s+/g, "");
+  const lines = body.match(/.{1,64}/g) ?? [body];
+  return `-----BEGIN PUBLIC KEY-----\n${lines.join("\n")}\n-----END PUBLIC KEY-----`;
 }
 
 function mapStatus(code: string): PayStatus {

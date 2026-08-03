@@ -289,31 +289,43 @@ export async function placeStorefrontOrder(
   const salePayment: "cash" | "card" =
     input.paymentMethod === "card" ? "card" : "cash";
 
-  // Card / online: PENDING sale only. No boards, no stock, no register.
-  // applyGatewayWebhook → completePendingSale is the sole completion path.
+  // Card / online: PENDING ledger only. No stock, no register, no durable sale row
+  // until applyGatewayWebhook → completePendingSale (Postgres has no pending sale_status).
   const isCardPending = input.paymentMethod === "card";
+  const lineTotal = resolvedLines.reduce(
+    (s, l) => s + l.unitPrice * l.quantity,
+    0,
+  );
 
-  const sale = await repo.createSale({
-    paymentMethod: salePayment,
-    lines: resolvedLines.map((l) => ({
-      productId: l.productId,
-      quantity: l.quantity,
-      discount: 0,
-    })),
-    customerName: input.customerName,
-    customerMobile: input.customerMobile,
-    clientUuid: input.clientUuid,
-    cashReceived:
-      salePayment === "cash"
-        ? resolvedLines.reduce((s, l) => s + l.unitPrice * l.quantity, 0)
-        : undefined,
-    status: isCardPending ? "pending" : "completed",
-  });
+  let saleId: string;
+  let receiptNo: string;
+  let total: number;
 
-  const s = sale as unknown as Record<string, unknown>;
-  const receiptNo =
-    (s.receiptNo as string) || (s.receipt_no as string) || sale.id;
-  const total = Number(sale.total || 0);
+  if (isCardPending) {
+    const { randomUUID } = await import("crypto");
+    receiptNo = `WEB-${randomUUID().slice(0, 8).toUpperCase()}`;
+    saleId = receiptNo;
+    total = lineTotal;
+  } else {
+    const sale = await repo.createSale({
+      paymentMethod: salePayment,
+      lines: resolvedLines.map((l) => ({
+        productId: l.productId,
+        quantity: l.quantity,
+        discount: 0,
+      })),
+      customerName: input.customerName,
+      customerMobile: input.customerMobile,
+      clientUuid: input.clientUuid,
+      cashReceived: lineTotal,
+      status: "completed",
+    });
+    const s = sale as unknown as Record<string, unknown>;
+    receiptNo =
+      (s.receiptNo as string) || (s.receipt_no as string) || sale.id;
+    saleId = sale.id;
+    total = Number(sale.total || 0);
+  }
   const itemsSummary = resolvedLines
     .map((l) => `${l.name} × ${l.quantity}`)
     .join("\n");
@@ -340,7 +352,7 @@ export async function placeStorefrontOrder(
         note: noteParts.join(" · "),
         status: "new",
         source: "storefront",
-        saleId: sale.id,
+        saleId,
         receiptNo,
       });
       boardId = cc.id;
@@ -360,7 +372,7 @@ export async function placeStorefrontOrder(
           unitPrice: l.unitPrice,
           quantity: l.quantity,
         })),
-        saleId: sale.id,
+        saleId,
         receiptNo,
       });
       boardId = del.id;
@@ -370,7 +382,7 @@ export async function placeStorefrontOrder(
 
   await saveStorefrontWebOrder({
     receiptNo,
-    saleId: sale.id,
+    saleId,
     slug: key.slug || "main-store",
     customerName: input.customerName,
     customerMobile: input.customerMobile,
@@ -393,7 +405,7 @@ export async function placeStorefrontOrder(
     pendingPayment: isCardPending,
   });
 
-  return { id: sale.id, receiptNo, total, boardId, boardKind, pendingPayment: isCardPending };
+  return { id: saleId, receiptNo, total, boardId, boardKind, pendingPayment: isCardPending };
 }
 
 /**
