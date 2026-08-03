@@ -3,16 +3,36 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { fadeUp, springSoft } from "@/lib/motion";
 
 const FEATURES = [
-  { title: "Multi-vertical selling", body: "Retail, restaurant, repair, rooms, and more" },
-  { title: "Server-authoritative totals", body: "Prices and stock checked before every sale" },
-  { title: "Reseller-ready licensing", body: "Plans, branding, and expiry enforced on the server" },
+  {
+    title: "Multi-vertical selling",
+    body: "Retail, restaurant, repair, rooms, and more",
+    tint: "var(--tint-blue)",
+  },
+  {
+    title: "Server-authoritative totals",
+    body: "Prices and stock checked before every sale",
+    tint: "var(--tint-teal)",
+  },
+  {
+    title: "Reseller-ready licensing",
+    body: "Plans, branding, and expiry enforced on the server",
+    tint: "var(--tint-coral)",
+  },
 ];
+
+function safeNextPath(): string {
+  if (typeof window === "undefined") return "/";
+  const raw = new URLSearchParams(window.location.search).get("next");
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +40,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const reduced = useReducedMotion();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +69,7 @@ export default function LoginPage() {
           return;
         }
       }
-      router.push("/");
+      router.push(safeNextPath());
       router.refresh();
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
@@ -57,43 +78,51 @@ export default function LoginPage() {
     }
   }
 
+  const brandMotion = fadeUp(reduced, 0);
+  const formMotion = fadeUp(reduced, 0.06);
+
   return (
-    <main className="flex min-h-screen items-stretch">
+    <main className="theme-marketing flex min-h-screen items-stretch">
       <a href="#login-form" className="skip-link">
         Skip to main content
       </a>
       <section className="relative hidden flex-1 flex-col justify-center overflow-hidden px-12 xl:px-16 lg:flex">
-        <motion.div
-          aria-hidden
-          className="absolute -top-40 -left-40 h-130 w-130 rounded-full bg-accent/12 blur-3xl"
-          animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        >
+        {!reduced && (
+          <>
+            <motion.div
+              aria-hidden
+              className="absolute -top-40 -left-40 h-130 w-130 rounded-full bg-accent/15 blur-3xl"
+              animate={{ scale: [1, 1.12, 1], opacity: [0.45, 0.85, 0.45] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute -bottom-32 right-0 h-96 w-96 rounded-full blur-3xl"
+              style={{ background: "color-mix(in oklch, var(--tint-coral) 18%, transparent)" }}
+              animate={{ scale: [1.05, 1, 1.05], opacity: [0.35, 0.7, 0.35] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </>
+        )}
+        <motion.div {...brandMotion}>
           <div className="mb-8 flex items-center gap-3">
             <span
               aria-hidden
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-base font-bold text-accent-ink"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-base font-bold text-accent-ink shadow-[0_4px_14px_-4px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
             >
               G
             </span>
-            <p className="text-sm font-medium text-accent">
+            <p className="text-sm font-semibold tracking-wide text-[oklch(78%_0.15_245)]">
               Grabber Mobility Solutions
             </p>
           </div>
-          <h1 className="max-w-lg text-5xl font-semibold tracking-tight text-text-strong xl:text-6xl">
+          <h1 className="text-hero-gradient max-w-lg text-5xl font-semibold tracking-tight xl:text-6xl">
             GRABBER POS Studio
           </h1>
         </motion.div>
         <motion.p
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.45 }}
-          className="mt-4 max-w-md text-base leading-relaxed text-text-dim"
+          {...fadeUp(reduced, 0.08)}
+          className="mt-4 max-w-md text-base leading-relaxed text-text-body"
         >
           One platform for every counter — back office, terminal, and licensing.
         </motion.p>
@@ -101,22 +130,30 @@ export default function LoginPage() {
           {FEATURES.map((f, i) => (
             <motion.li
               key={f.title}
-              initial={{ opacity: 0, x: -16 }}
+              initial={reduced ? false : { opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + i * 0.1, duration: 0.45 }}
+              transition={
+                reduced ? { duration: 0 } : { ...springSoft, delay: 0.15 + i * 0.08 }
+              }
               className="flex items-start gap-3"
             >
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+              <span
+                className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                style={{ background: f.tint }}
+              />
               <div>
                 <p className="font-medium text-text-strong">{f.title}</p>
-                <p className="text-sm text-text-dim">{f.body}</p>
+                <p className="text-sm text-text-body">{f.body}</p>
               </div>
             </motion.li>
           ))}
         </ul>
-        <p className="mt-16 text-xs text-text-dim">
+        <p className="mt-16 text-xs text-text-body">
           Looking for product details?{" "}
-          <Link href="/welcome" className="text-accent transition hover:underline">
+          <Link
+            href="/welcome"
+            className="font-medium text-[var(--tint-teal)] transition hover:text-accent hover:underline"
+          >
             View the overview
           </Link>
         </p>
@@ -126,15 +163,13 @@ export default function LoginPage() {
         <motion.form
           id="login-form"
           onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md rounded-2xl border border-line bg-surface-1/95 p-6 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.55)] sm:p-8"
+          {...formMotion}
+          className="panel-glass w-full max-w-md rounded-3xl border border-line p-6 sm:p-8"
         >
           <div className="mb-6 flex items-center gap-3 lg:hidden">
             <span
               aria-hidden
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-accent text-sm font-bold text-accent-ink"
             >
               G
             </span>
@@ -153,7 +188,10 @@ export default function LoginPage() {
             Access your terminal and back office
           </p>
 
-          <label className="mt-6 block text-sm font-medium text-text-body lg:mt-8" htmlFor="login-username">
+          <label
+            className="mt-6 block text-sm font-medium text-text-body lg:mt-8"
+            htmlFor="login-username"
+          >
             {isSupabaseEnabled ? "Email" : "Email / username"}
             <input
               id="login-username"
@@ -161,10 +199,13 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               required
-              className="mt-2 w-full rounded-xl border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent"
+              className="mt-2 w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </label>
-          <label className="mt-5 block text-sm font-medium text-text-body" htmlFor="login-password">
+          <label
+            className="mt-5 block text-sm font-medium text-text-body"
+            htmlFor="login-password"
+          >
             Password
             <input
               id="login-password"
@@ -173,15 +214,15 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="mt-2 w-full rounded-xl border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent"
+              className="mt-2 w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </label>
 
           {error && (
             <motion.p
-              initial={{ opacity: 0, y: -6 }}
+              initial={reduced ? false : { opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 rounded-xl border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger"
+              className="mt-4 rounded-2xl border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger"
               role="alert"
               aria-live="assertive"
             >
@@ -189,12 +230,7 @@ export default function LoginPage() {
             </motion.p>
           )}
 
-          <Button
-            type="submit"
-            disabled={pending}
-            size="lg"
-            className="mt-8 w-full"
-          >
+          <Button type="submit" disabled={pending} size="lg" className="mt-8 w-full">
             {pending ? "Signing in…" : "Sign in"}
           </Button>
           <p className="mt-6 text-center text-xs text-text-dim">

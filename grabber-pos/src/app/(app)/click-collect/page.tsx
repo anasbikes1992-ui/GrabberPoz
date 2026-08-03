@@ -10,10 +10,12 @@ interface CCOrder {
   items: string;
   status: string;
   note: string;
+  source?: string;
+  receiptNo?: string | null;
   createdAt: string;
 }
 
-const STATUSES = ["pending", "picked", "ready", "collected"] as const;
+const STATUSES = ["new", "preparing", "ready", "done"] as const;
 
 export default function ClickCollectPage() {
   const [rows, setRows] = useState<CCOrder[]>([]);
@@ -121,7 +123,15 @@ export default function ClickCollectPage() {
                 <p className="font-medium text-text-strong">
                   {r.customer}{" "}
                   <span className="text-xs text-text-dim">{r.id}</span>
+                  {r.source === "storefront" && (
+                    <span className="ml-2 rounded-full bg-[color-mix(in_oklch,var(--tint-teal)_15%,transparent)] px-2 py-0.5 text-[10px] font-semibold uppercase text-[var(--tint-teal)]">
+                      web
+                    </span>
+                  )}
                 </p>
+                {r.receiptNo && (
+                  <p className="text-xs font-mono text-accent">{r.receiptNo}</p>
+                )}
                 <p className="mt-1 whitespace-pre-wrap text-sm text-text-body">
                   {r.items}
                 </p>
@@ -130,7 +140,15 @@ export default function ClickCollectPage() {
                 )}
               </div>
               <select
-                value={r.status}
+                value={
+                  r.status === "pending"
+                    ? "new"
+                    : r.status === "picked"
+                      ? "preparing"
+                      : r.status === "collected"
+                        ? "done"
+                        : r.status
+                }
                 onChange={(e) => void setStatus(r.id, e.target.value)}
                 className="rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-sm text-text-strong"
               >

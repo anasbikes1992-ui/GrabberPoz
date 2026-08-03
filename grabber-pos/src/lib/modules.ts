@@ -94,6 +94,7 @@ export const MODULE_GROUPS: ModuleGroup[] = [
       { key: "reports", title: "Reports", subtitle: "Analytics & export", icon: "📑", href: "/reports", status: "active" },
       { key: "alerts", title: "Alerts", subtitle: "Low stock & expiry", icon: "🔔", href: "/alerts", status: "active" },
       { key: "audit", title: "Audit log", subtitle: "Sensitive actions", icon: "📜", href: "/audit", status: "active" },
+      { key: "website", title: "Website", subtitle: "Themes · banners · SEO", icon: "🌐", href: "/website", status: "active" },
       { key: "settings", title: "Settings", subtitle: "Business & receipt", icon: "⚙️", href: "/settings", status: "active" },
       { key: "display", title: "Customer display", subtitle: "Second screen total", icon: "🖥️", href: "/display", status: "active" },
       { key: "privacy", title: "Privacy purge", subtitle: "PII retention", icon: "🧹", href: "/privacy", status: "active" },

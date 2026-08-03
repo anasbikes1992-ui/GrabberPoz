@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
+import { verifySessionToken } from "@/lib/server/session";
 
 const DEMO_COOKIE = "pos_session";
 const PUBLIC_PATHS = [
@@ -12,15 +13,12 @@ const PUBLIC_PATHS = [
   "/api/store",
   "/sitemap.xml",
   "/robots.txt",
+  "/api/payments/webhook",
 ];
 
 /**
- * Optimistic auth guard (per Next.js guidance, real authorization lives in the
- * data layer via Supabase RLS). Accepts a Supabase session cookie
- * (`sb-*-auth-token`), or the local demo cookie when Supabase is unconfigured.
- *
- * Once Supabase is configured the demo cookie is ignored, so a session minted
- * before the switch can't keep authorizing requests in production.
+ * Optimistic auth guard. Demo cookie must be HMAC-valid when Supabase is off.
+ * Once Supabase is configured the demo cookie is ignored.
  */
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -31,8 +29,8 @@ export function proxy(req: NextRequest) {
   const hasSupabaseSession = req.cookies
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
-  const hasDemoSession =
-    !isSupabaseEnabled && Boolean(req.cookies.get(DEMO_COOKIE)?.value);
+  const demoRaw = req.cookies.get(DEMO_COOKIE)?.value;
+  const hasDemoSession = !isSupabaseEnabled && verifySessionToken(demoRaw);
 
   if (!hasSupabaseSession && !hasDemoSession) {
     if (pathname.startsWith("/api/")) {
@@ -43,6 +41,10 @@ export function proxy(req: NextRequest) {
     }
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    if (pathname.startsWith("/hq")) {
+      url.searchParams.set("next", pathname);
+    }
     return NextResponse.redirect(url);
   }
   return NextResponse.next();

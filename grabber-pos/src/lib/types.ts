@@ -17,6 +17,11 @@ export interface Product {
   supplier: string | null;
   /** Optional product image URL. */
   imageUrl?: string | null;
+  /**
+   * When false, product is hidden from the public storefront.
+   * Unset / true = visible (demo JSON often omits the flag).
+   */
+  onlineVisible?: boolean;
 }
 
 export interface CartLine {
@@ -76,7 +81,7 @@ export interface Sale {
   employee: string | null;
   cashReceived: number | null;
   change: number | null;
-  status?: "completed" | "voided";
+  status?: "completed" | "voided" | "pending";
   voidReason?: string | null;
   voidedAt?: string | null;
   cashAmount?: number | null;

@@ -87,6 +87,14 @@ Migration 0006 consolidated onto these: `app_settings` became
 `app_collections['restaurant-orders']`. Neither had shipped to a live project, so
 no data migration was needed.
 
+## Storefront (0007)
+
+Migration `0007_storefront` adds public-shop support: a `storefronts` table (slug /
+domain), product fields for online visibility / slug / online price, and
+SECURITY DEFINER RPCs for anonymous catalog + order placement. Website CMS config
+also lives in `app_documents` (`key = 'website'`). See
+[CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md) and [PRODUCTION.md](PRODUCTION.md).
+
 ## Row-Level Security
 
 Every tenant table has RLS enabled. Summary:

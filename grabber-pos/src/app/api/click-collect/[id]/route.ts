@@ -3,7 +3,15 @@ import { z } from "zod";
 import { patchClickCollect } from "@/lib/server/click-collect-store";
 
 const schema = z.object({
-  status: z.enum(["pending", "picked", "ready", "collected"]),
+  status: z.enum([
+    "new",
+    "preparing",
+    "ready",
+    "done",
+    "pending",
+    "picked",
+    "collected",
+  ]),
 });
 
 export async function PATCH(

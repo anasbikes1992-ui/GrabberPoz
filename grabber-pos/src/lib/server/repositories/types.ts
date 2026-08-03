@@ -41,6 +41,11 @@ export interface CreateSaleInput {
   managerPin?: string;
   /** Device-generated idempotency key (offline-safe retries). */
   clientUuid?: string;
+  /**
+   * Card/online storefront must create PENDING sales.
+   * Only applyGatewayWebhook → completePendingSale may flip to completed + stock.
+   */
+  status?: "pending" | "completed";
 }
 
 export interface InventoryStats {

@@ -3,7 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseEnabled } from "@/lib/supabase/config";
 import { getRepository } from "@/lib/server/repositories";
 import { readSettings } from "./settings-store";
-import { slugify, type StorefrontInfo, type StoreCatalog, type StoreProduct } from "@/lib/storefront";
+import { readWebsite } from "./website-store";
+import { createClickCollect } from "./click-collect-store";
+import { createOrderFromStorefront } from "./delivery-store";
+import { saveStorefrontWebOrder, findStorefrontOrderBySaleOrReceipt, updateStorefrontWebOrder } from "./storefront-orders-store";
+import {
+  slugify,
+  type StorefrontInfo,
+  type StoreCatalog,
+  type StoreProduct,
+} from "@/lib/storefront";
+import type { FulfilmentMode, PaymentMode, WebsiteConfig } from "@/lib/website";
+import type { Product } from "@/lib/types";
 
 function anonClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -16,25 +27,53 @@ export interface StorefrontKey {
   slug: string | null;
 }
 
-function localInfo(businessName: string): StorefrontInfo {
+function localInfo(
+  businessName: string,
+  website: WebsiteConfig,
+  settingsWhatsapp: string,
+): StorefrontInfo {
   return {
     slug: "main-store",
     domain: null,
     businessName,
-    heroHeadline: businessName,
-    heroSubline: "Shop online — fast local delivery",
-    heroImageUrl: null,
-    about: null,
-    whatsappNumber: null,
+    heroHeadline: website.heroHeadline || businessName,
+    heroSubline:
+      website.heroSubline || "Shop online — fast local delivery",
+    heroImageUrl: website.banners[0]?.imageUrl || website.ogImageUrl || null,
+    about: website.about || null,
+    whatsappNumber: website.whatsappNumber || settingsWhatsapp || null,
     ga4Id: null,
     googleAdsId: null,
     metaPixelId: null,
   };
 }
 
+/** True when the product should appear on the public catalog (local path). */
+export function isOnlineVisible(p: Product): boolean {
+  const flag = (p as Product & { onlineVisible?: boolean }).onlineVisible;
+  // Demo JSON products rarely set the flag — treat unset as visible.
+  return flag !== false;
+}
+
 export async function getStorefrontInfo(key: StorefrontKey): Promise<StorefrontInfo | null> {
   const settings = await readSettings();
-  const defaultInfo = localInfo(settings.businessName || "GRABBER POS Store");
+  const website = await readWebsite();
+  if (!website.enabled) {
+    return null;
+  }
+
+  const defaultInfo = localInfo(
+    settings.businessName || "GRABBER POS Store",
+    website,
+    settings.socialWhatsapp || settings.phone || "",
+  );
+
+  // Prefer settings slug when host/slug match local demo.
+  if (key.slug) {
+    defaultInfo.slug = key.slug;
+  } else if (settings.storeSlug) {
+    defaultInfo.slug = settings.storeSlug;
+  }
 
   if (!isSupabaseEnabled) {
     return defaultInfo;
@@ -48,7 +87,19 @@ export async function getStorefrontInfo(key: StorefrontKey): Promise<StorefrontI
     if (error || !data) {
       return defaultInfo;
     }
-    return (data as StorefrontInfo) ?? defaultInfo;
+    const remote = data as StorefrontInfo;
+    return {
+      ...remote,
+      heroHeadline: website.heroHeadline || remote.heroHeadline,
+      heroSubline: website.heroSubline || remote.heroSubline,
+      heroImageUrl:
+        website.banners[0]?.imageUrl ||
+        website.ogImageUrl ||
+        remote.heroImageUrl,
+      about: website.about || remote.about,
+      whatsappNumber:
+        website.whatsappNumber || remote.whatsappNumber || defaultInfo.whatsappNumber,
+    };
   } catch {
     return defaultInfo;
   }
@@ -63,9 +114,21 @@ export async function getStorefrontCatalog(
 
   const fallbackCatalog = async (): Promise<StoreCatalog> => {
     const repo = await getRepository();
-    const pPage = await repo.queryProducts({ pageSize: size, page, search: q.search, category: q.category });
+    const pPage = await repo.queryProducts({
+      pageSize: 500,
+      search: q.search,
+      category: q.category,
+    });
+    const visible = pPage.items.filter(isOnlineVisible);
+    const start = (page - 1) * size;
+    const slice = visible.slice(start, start + size);
+    const categoryCounts = new Map<string, number>();
+    for (const p of visible) {
+      if (!p.category) continue;
+      categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+    }
     return {
-      items: pPage.items.map((p) => ({
+      items: slice.map((p) => ({
         id: p.id,
         slug: slugify(p.name),
         name: p.name,
@@ -77,10 +140,13 @@ export async function getStorefrontCatalog(
         stock: p.quantity,
         category: p.category,
       })),
-      total: pPage.total,
+      total: visible.length,
       page,
       size,
-      categories: pPage.categories,
+      categories: [...categoryCounts.entries()].map(([name, count]) => ({
+        name,
+        count,
+      })),
     };
   };
 
@@ -113,7 +179,9 @@ export async function getStorefrontProduct(
   const fallbackProduct = async (): Promise<StoreProduct | null> => {
     const repo = await getRepository();
     const pPage = await repo.queryProducts({ pageSize: 500 });
-    const match = pPage.items.find((p) => slugify(p.name) === productSlug || p.id === productSlug);
+    const match = pPage.items
+      .filter(isOnlineVisible)
+      .find((p) => slugify(p.name) === productSlug || p.id === productSlug);
     if (!match) return null;
     return {
       id: match.id,
@@ -151,10 +219,9 @@ export async function getStorefrontProduct(
 export async function getStorefrontProductSlugs(
   key: StorefrontKey,
 ): Promise<{ slug: string; updatedAt: string }[]> {
-  const repo = await getRepository();
-  const page = await repo.queryProducts({ pageSize: 500 });
-  return page.items.map((p) => ({
-    slug: slugify(p.name),
+  const catalog = await getStorefrontCatalog(key, { size: 500 });
+  return catalog.items.map((p) => ({
+    slug: p.slug,
     updatedAt: new Date().toISOString(),
   }));
 }
@@ -162,7 +229,13 @@ export async function getStorefrontProductSlugs(
 export interface StoreOrderInput {
   customerName: string;
   customerMobile: string;
+  customerEmail?: string | null;
+  customerId?: string | null;
   address: string;
+  pickupNote?: string;
+  paymentMethod: PaymentMode;
+  paymentReference?: string;
+  fulfilment: FulfilmentMode;
   clientUuid: string;
   lines: { productId: string; quantity: number }[];
 }
@@ -170,38 +243,215 @@ export interface StoreOrderInput {
 export async function placeStorefrontOrder(
   key: StorefrontKey,
   input: StoreOrderInput,
-): Promise<{ id: string; receiptNo: string; total: number }> {
+): Promise<{
+  id: string;
+  receiptNo: string;
+  total: number;
+  boardId: string | null;
+  boardKind: "click-collect" | "delivery" | null;
+  pendingPayment?: boolean;
+}> {
+  const website = await readWebsite();
+  if (!website.enabled) {
+    throw new Error("STOREFRONT: online ordering is disabled");
+  }
+  if (!website.paymentModes.includes(input.paymentMethod)) {
+    throw new Error("ORDER: payment method is not available");
+  }
+  if (!website.fulfilmentModes.includes(input.fulfilment)) {
+    throw new Error("ORDER: fulfilment mode is not available");
+  }
+
   const repo = await getRepository();
   const productsPage = await repo.queryProducts({ pageSize: 500 });
+  const visible = productsPage.items.filter(isOnlineVisible);
 
   const resolvedLines = input.lines.map((line) => {
-    const matched = productsPage.items.find(
-      (p) => p.id === line.productId || p.barcodes?.includes(line.productId) || slugify(p.name) === line.productId
+    const matched = visible.find(
+      (p) =>
+        p.id === line.productId ||
+        p.barcodes?.includes(line.productId) ||
+        slugify(p.name) === line.productId,
     );
+    if (!matched) {
+      throw new Error(`PRODUCT: ${line.productId} is not available online`);
+    }
     return {
-      productId: matched?.id ?? line.productId,
+      productId: matched.id,
+      name: matched.name,
+      unitPrice: matched.salePrice,
       quantity: Math.max(1, Number(line.quantity) || 1),
       discount: 0,
     };
   });
 
-  try {
-    const sale = await repo.createSale({
-      paymentMethod: "cash",
-      lines: resolvedLines,
-      customerName: input.customerName,
-      customerMobile: input.customerMobile,
-      clientUuid: input.clientUuid,
-    });
+  // Map storefront payment modes onto POS sale methods (card stays card; bank → cash pending).
+  const salePayment: "cash" | "card" =
+    input.paymentMethod === "card" ? "card" : "cash";
 
-    const s = sale as unknown as Record<string, unknown>;
-    return {
-      id: sale.id,
-      receiptNo: (s.receiptNo as string) || (s.receipt_no as string) || sale.id,
-      total: Number(sale.total || 0),
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Order placement failed";
-    throw new Error(message);
+  // Card / online: PENDING sale only. No boards, no stock, no register.
+  // applyGatewayWebhook → completePendingSale is the sole completion path.
+  const isCardPending = input.paymentMethod === "card";
+
+  const sale = await repo.createSale({
+    paymentMethod: salePayment,
+    lines: resolvedLines.map((l) => ({
+      productId: l.productId,
+      quantity: l.quantity,
+      discount: 0,
+    })),
+    customerName: input.customerName,
+    customerMobile: input.customerMobile,
+    clientUuid: input.clientUuid,
+    cashReceived:
+      salePayment === "cash"
+        ? resolvedLines.reduce((s, l) => s + l.unitPrice * l.quantity, 0)
+        : undefined,
+    status: isCardPending ? "pending" : "completed",
+  });
+
+  const s = sale as unknown as Record<string, unknown>;
+  const receiptNo =
+    (s.receiptNo as string) || (s.receipt_no as string) || sale.id;
+  const total = Number(sale.total || 0);
+  const itemsSummary = resolvedLines
+    .map((l) => `${l.name} × ${l.quantity}`)
+    .join("\n");
+
+  const noteParts = [
+    `Web order ${receiptNo}`,
+    `Pay: ${input.paymentMethod}`,
+    isCardPending ? "AWAITING_GATEWAY_PAYMENT" : null,
+    input.paymentReference ? `Ref: ${input.paymentReference}` : null,
+    input.pickupNote ? `Note: ${input.pickupNote}` : null,
+    input.customerEmail ? `Email: ${input.customerEmail}` : null,
+  ].filter(Boolean);
+
+  let boardId: string | null = null;
+  let boardKind: "click-collect" | "delivery" | null = null;
+
+  // Do not put card orders on fulfilment boards until webhook confirms PAID.
+  if (!isCardPending) {
+    if (input.fulfilment === "pickup") {
+      const cc = await createClickCollect({
+        customer: input.customerName,
+        phone: input.customerMobile,
+        items: itemsSummary,
+        note: noteParts.join(" · "),
+        status: "new",
+        source: "storefront",
+        saleId: sale.id,
+        receiptNo,
+      });
+      boardId = cc.id;
+      boardKind = "click-collect";
+    } else {
+      const del = await createOrderFromStorefront({
+        customer: input.customerName,
+        phone: input.customerMobile,
+        address:
+          input.address ||
+          `${input.fulfilment.toUpperCase()} — address TBD`,
+        note: noteParts.join(" · "),
+        fulfilment: input.fulfilment,
+        lines: resolvedLines.map((l) => ({
+          productId: l.productId,
+          name: l.name,
+          unitPrice: l.unitPrice,
+          quantity: l.quantity,
+        })),
+        saleId: sale.id,
+        receiptNo,
+      });
+      boardId = del.id;
+      boardKind = "delivery";
+    }
   }
+
+  await saveStorefrontWebOrder({
+    receiptNo,
+    saleId: sale.id,
+    slug: key.slug || "main-store",
+    customerName: input.customerName,
+    customerMobile: input.customerMobile,
+    customerEmail: input.customerEmail ?? null,
+    customerId: input.customerId ?? null,
+    address: input.address,
+    pickupNote: input.pickupNote ?? "",
+    paymentMethod: input.paymentMethod,
+    paymentReference: input.paymentReference ?? "",
+    fulfilment: input.fulfilment,
+    lines: resolvedLines.map((l) => ({
+      productId: l.productId,
+      name: l.name,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+    })),
+    total,
+    boardId,
+    boardKind,
+    pendingPayment: isCardPending,
+  });
+
+  return { id: sale.id, receiptNo, total, boardId, boardKind, pendingPayment: isCardPending };
+}
+
+/**
+ * After gateway webhook marks PAID and sale is completed, place fulfilment boards.
+ */
+export async function fulfillPendingStorefrontBoards(
+  saleId: string,
+  receiptNo: string,
+): Promise<void> {
+  const order = await findStorefrontOrderBySaleOrReceipt(saleId, receiptNo);
+  if (!order || !order.pendingPayment) return;
+  if (order.boardId) {
+    await updateStorefrontWebOrder(order.id, { pendingPayment: false });
+    return;
+  }
+
+  const itemsSummary = order.lines.map((l) => `${l.name} × ${l.quantity}`).join("\n");
+  const note = `Web order ${order.receiptNo} · Pay: ${order.paymentMethod} · PAID`;
+
+  let boardId: string | null = null;
+  let boardKind: "click-collect" | "delivery" | null = null;
+
+  if (order.fulfilment === "pickup") {
+    const cc = await createClickCollect({
+      customer: order.customerName,
+      phone: order.customerMobile,
+      items: itemsSummary,
+      note,
+      status: "new",
+      source: "storefront",
+      saleId: order.saleId ?? saleId,
+      receiptNo: order.receiptNo,
+    });
+    boardId = cc.id;
+    boardKind = "click-collect";
+  } else {
+    const del = await createOrderFromStorefront({
+      customer: order.customerName,
+      phone: order.customerMobile,
+      address: order.address || `${order.fulfilment.toUpperCase()} — address TBD`,
+      note,
+      fulfilment: order.fulfilment,
+      lines: order.lines.map((l) => ({
+        productId: l.productId,
+        name: l.name,
+        unitPrice: l.unitPrice,
+        quantity: l.quantity,
+      })),
+      saleId: order.saleId ?? saleId,
+      receiptNo: order.receiptNo,
+    });
+    boardId = del.id;
+    boardKind = "delivery";
+  }
+
+  await updateStorefrontWebOrder(order.id, {
+    boardId,
+    boardKind,
+    pendingPayment: false,
+  });
 }

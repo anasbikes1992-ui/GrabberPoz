@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { getRepository } from "@/lib/server/repositories";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import {
+  getStorefrontCatalog,
+  getStorefrontInfo,
+} from "@/lib/server/storefront-repo";
+import { readWebsite } from "@/lib/server/website-store";
 import { readSettings } from "@/lib/server/settings-store";
 import StorefrontClient from "./StorefrontClient";
 
@@ -10,8 +16,15 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const settings = await readSettings();
-  const title = `${settings.businessName} — Online Store & Fast Delivery`;
-  const description = settings.storeSlogan || `Shop online at ${settings.businessName}. Quality products, best prices, and fast delivery to your doorstep.`;
+  const website = await readWebsite();
+  const title =
+    website.seoTitle ||
+    `${settings.businessName} — Online Store & Fast Delivery`;
+  const description =
+    website.seoDescription ||
+    settings.storeSlogan ||
+    `Shop online at ${settings.businessName}. Quality products, best prices, and fast delivery.`;
+  const og = website.ogImageUrl || website.banners[0]?.imageUrl || settings.storeBanner;
 
   return {
     title,
@@ -30,17 +43,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: "website",
       siteName: settings.businessName,
-      images: settings.storeBanner ? [{ url: settings.storeBanner }] : [],
+      images: og ? [{ url: og }] : [],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: settings.storeBanner ? [settings.storeBanner] : [],
+      images: og ? [og] : [],
     },
     robots: {
-      index: true,
-      follow: true,
+      index: website.enabled,
+      follow: website.enabled,
     },
   };
 }
@@ -52,19 +65,19 @@ export default async function TenantStorePage({
 }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || "main-store";
-  const repo = await getRepository();
-  const page = await repo.queryProducts({ pageSize: 100 });
+  const host = (await headers()).get("host");
+  const info = await getStorefrontInfo({ host, slug });
+  if (!info) notFound();
+
+  const website = await readWebsite();
   const settings = await readSettings();
+  const catalog = await getStorefrontCatalog({ host, slug }, { size: 100 });
 
-  const products = page.items;
-  const categories = page.categories;
-
-  // Schema.org JSON-LD Structured Data for Google SEO & Rich Snippets
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Store",
-    name: settings.businessName,
-    description: settings.storeSlogan,
+    name: info.businessName,
+    description: website.seoDescription || settings.storeSlogan,
     telephone: settings.phone,
     email: settings.email,
     address: {
@@ -73,18 +86,24 @@ export default async function TenantStorePage({
     },
     hasMenu: {
       "@type": "Menu",
-      hasMenuItem: products.slice(0, 20).map((p) => ({
+      hasMenuItem: catalog.items.slice(0, 20).map((p) => ({
         "@type": "MenuItem",
         name: p.name,
         offers: {
           "@type": "Offer",
-          price: p.salePrice,
+          price: p.price,
           priceCurrency: settings.currency || "LKR",
-          availability: p.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          availability:
+            p.stock > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
         },
       })),
     },
   };
+
+  const adsId = settings.googleAdsId || info.googleAdsId;
+  const pixelId = settings.metaPixelId || info.metaPixelId;
 
   return (
     <>
@@ -92,25 +111,25 @@ export default async function TenantStorePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {settings.googleAdsId && (
+      {adsId && (
         <script
           async
-          src={`https://www.googletagmanager.com/gtag/js?id=${settings.googleAdsId}`}
+          src={`https://www.googletagmanager.com/gtag/js?id=${adsId}`}
         />
       )}
-      {settings.googleAdsId && (
+      {adsId && (
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${settings.googleAdsId}');
+              gtag('config', '${adsId}');
             `,
           }}
         />
       )}
-      {settings.metaPixelId && (
+      {pixelId && (
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -122,7 +141,7 @@ export default async function TenantStorePage({
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${settings.metaPixelId}');
+              fbq('init', '${pixelId}');
               fbq('track', 'PageView');
             `,
           }}
@@ -130,9 +149,12 @@ export default async function TenantStorePage({
       )}
       <StorefrontClient
         slug={slug}
-        settings={settings}
-        initialProducts={products}
-        categories={categories}
+        businessName={info.businessName}
+        website={website}
+        products={catalog.items}
+        categories={catalog.categories}
+        phone={settings.phone}
+        currency={settings.currency || "LKR"}
       />
     </>
   );

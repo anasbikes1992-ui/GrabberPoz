@@ -64,10 +64,26 @@ Licensing is enforced by a per-workspace **license** (plan + expiry + extras) pl
 Gated modules render with a **🔒 Upgrade** badge on the home launcher and can't be
 opened until the plan is raised — enforced live by the `BrandProvider` context.
 
+## Two consoles: `/hq` vs `/admin`
+
+| Console | Who | Purpose |
+|---------|-----|---------|
+| **`/hq`** | Grabber Mobility Solutions (GMS) staff | Fleet portal — all tenants, licence monitor, onboard pipeline, tickets stub, docs hub |
+| **`/admin`** | Client owner / reseller **inside one workspace** | White-label, licence, onboard, and client list for *this* organization only |
+
+GMS operators: start at [GMS-OPERATIONS.md](GMS-OPERATIONS.md) and `/hq`. Do not
+hand `/hq` to end customers. Storefront coaching for shop owners:
+[CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md).
+
+Access to `/hq` requires `GMS_ADMIN_EMAILS` (and/or Auth `gms_admin` metadata) —
+see [PRODUCTION.md](PRODUCTION.md). Cross-org roll-ups need
+`SUPABASE_SERVICE_ROLE_KEY` (server-only).
+
 ## Super-admin console — `/admin`
 
-The reseller back-office, reachable from the **Reselling** launcher group
-(Super-admin / Clients tiles):
+The **tenant** back-office, reachable from the **Reselling** launcher group
+(Super-admin / Clients tiles). Same branding/licence tools also appear in
+`/hq` for fleet operators acting on a tenant:
 
 - **White-label this workspace** — set business name, logo URL and accent colour;
   changes apply live across the shell (topbar wordmark + accent design token).
@@ -76,7 +92,8 @@ The reseller back-office, reachable from the **Reselling** launcher group
 - **Onboard a client** — a three-step wizard (Business → Plan → Review) that
   creates the client record and, for a dedicated deployment, applies their
   branding and licence to the instance in one action. It finishes with the
-  provisioning checklist below.
+  provisioning checklist below. Fleet operators can also run this from
+  **`/hq/onboard`**.
 - **Manage client organizations** — a CRUD list of clients (name, contact, plan,
   expiry, status).
 
@@ -97,9 +114,10 @@ badge on the launcher.
 The **Help & guides** module carries release notes, notices and training video
 links to every client on every plan.
 
-> Still on the roadmap: a cross-client usage & billing dashboard. The
-> `reseller_licences` view (service-role only) already rolls licences, branch and
-> user counts and sales totals up across organizations to build it on.
+> Fleet monitoring lives in **`/hq`** (command center, tenants, licence expiry
+> alerts). It reads the `reseller_licences` view with the service role when
+> configured; otherwise it falls back to demo client/tenant data. Full helpdesk
+> billing is still thin — tickets in `/hq/tickets` are a guidance stub.
 
 ## Pricing model (suggested)
 
@@ -118,6 +136,7 @@ You set the commercials; a common structure for this market:
 - [ ] Printers configured (receipt + KOT/BOT where used)
 - [ ] Staff logins created with correct roles
 - [ ] Owner + cashiers trained (see [USER-GUIDE.md](USER-GUIDE.md))
+- [ ] If selling online: Website CMS + storefront smoke test (see [CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md))
 - [ ] Mobile app installed on handhelds (if used)
 
 ## Support & updates
@@ -125,3 +144,4 @@ You set the commercials; a common structure for this market:
 - All clients on the multi-tenant cloud get updates automatically when you deploy.
 - White-label clients are updated per instance — keep a deployment list.
 - Point clients at the in-app Help & guides module and the [User Guide](USER-GUIDE.md).
+- GMS fleet ops: [GMS-OPERATIONS.md](GMS-OPERATIONS.md) and `/hq`.

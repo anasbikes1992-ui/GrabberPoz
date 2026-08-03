@@ -32,10 +32,13 @@ cash in/out, currency, quotations, appointments, SMS templates, reports, alerts,
 settings.
 
 **Reselling layer** — white-label branding, plan-based feature gating, licence
-enforcement, a client onboarding wizard and a super-admin console.
+enforcement, client onboarding, tenant `/admin`, and GMS fleet `/hq`.
+
+**Storefront** — per-tenant Website CMS (`/website`) and public shop
+(`/store/[slug]`); web orders land on Click & collect / Delivery.
 
 Key screens: `/` launcher · `/pos` terminal · `/dashboard` · `/sales` ·
-`/admin` super-admin · `/welcome` overview · `/api/health` readiness probe.
+`/admin` · `/hq` · `/website` · `/store/[slug]` · `/welcome` · `/api/health`.
 
 ## Key design points
 
@@ -63,6 +66,8 @@ Key screens: `/` launcher · `/pos` terminal · `/dashboard` · `/sales` ·
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Vercel + mobile builds |
 | [USER-GUIDE.md](docs/USER-GUIDE.md) | Day-to-day use, for staff |
 | [RESELLER-GUIDE.md](docs/RESELLER-GUIDE.md) | Selling and delivering it to clients |
+| [GMS-OPERATIONS.md](docs/GMS-OPERATIONS.md) | Grabber Mobility Solutions fleet ops (`/hq`) |
+| [CUSTOMER-STOREFRONT.md](docs/CUSTOMER-STOREFRONT.md) | Tenant website CMS + public shop |
 | [FEATURE-PLAN.md](docs/FEATURE-PLAN.md) | Module inventory + roadmap |
 | [PRODUCT-GAP.md](docs/PRODUCT-GAP.md) | Gaps, missed ideas, sprint order |
 | [PRODUCT.md](PRODUCT.md) | Product truth (users, principles) |
@@ -94,7 +99,7 @@ src/
 │   ├── plans.ts    # plan tiers + feature gating
 │   └── validation.ts, types.ts, format.ts, receipt.ts
 └── data/products.json   # demo catalog seed
-supabase/migrations/     # 0001 schema → 0006 app documents
+supabase/migrations/     # 0001 schema → 0007 storefront
 scripts/seed.mjs         # Supabase seeder
 docs/                    # production, architecture, setup, data model, guides
 ```

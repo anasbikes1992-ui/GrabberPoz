@@ -79,3 +79,8 @@ layouts). The normalized grocery dataset is already seeded; the seed script
 (`grabber-pos/scripts/seed.mjs`) loads it into Supabase. Remaining modules
 (suppliers, purchase orders, reports, user management) follow the schema and
 business rules documented in `grabber-pos/docs/`.
+
+## Vercel
+
+Import GitHub repo `Grabberlk/GrabberPoz`. Set **Root Directory** to `grabber-pos` (required).
+Repo root is only husky wrappers — deploying `.` yields empty/404 output.

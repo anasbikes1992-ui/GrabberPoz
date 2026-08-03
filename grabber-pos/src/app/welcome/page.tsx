@@ -2,38 +2,50 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  fadeUp,
+  interactiveCard,
+  staggerContainer,
+  staggerItem,
+} from "@/lib/motion";
 
 const VERTICALS = [
   {
     mark: "R",
     title: "Retail & supermarket",
     body: "Barcode scanning, scale lines, cash drawer, and discount limits.",
+    tint: "var(--tint-blue)",
   },
   {
     mark: "D",
     title: "Restaurant & cafe",
     body: "Floor plans, split bills, and ESC/POS kitchen order tickets.",
+    tint: "var(--tint-coral)",
   },
   {
     mark: "S",
     title: "Service & repair",
     body: "Job sheets, status updates, parts and labour on one bill.",
+    tint: "var(--tint-teal)",
   },
   {
     mark: "W",
     title: "Wholesale",
     body: "Tier pricing, credit balances, bulk qty, and purchase GRNs.",
+    tint: "var(--tint-amber)",
   },
   {
     mark: "H",
     title: "Hotels & rooms",
     body: "Reservations, check-in/out, room service, and guest folios.",
+    tint: "var(--tint-pink)",
   },
   {
     mark: "I",
     title: "Hire & rentals",
     body: "Installment schedules, deposits, and overdue alerts.",
+    tint: "var(--tint-green)",
   },
 ] as const;
 
@@ -46,19 +58,22 @@ const STOREFRONT_POINTS = [
 
 export default function WelcomePage() {
   const [salesVolume, setSalesVolume] = useState(500000);
+  const reduced = useReducedMotion();
 
   const timeSavedHours = Math.round((salesVolume / 100000) * 12);
   const stockLossPrevented = Math.round(salesVolume * 0.035);
   const extraWebSales = Math.round(salesVolume * 0.18);
+  const hero = fadeUp(reduced, 0);
+  const heroVisual = fadeUp(reduced, 0.08);
 
   return (
-    <div className="min-h-screen text-text-body selection:bg-accent/30 selection:text-text-strong">
-      <header className="sticky top-0 z-50 border-b border-line bg-surface-1/85 px-5 py-3.5 backdrop-blur-md sm:px-8 lg:px-12">
+    <div className="theme-marketing min-h-screen text-text-body selection:bg-accent/25 selection:text-text-strong">
+      <header className="sticky top-0 z-50 border-b border-line bg-surface-1/80 px-5 py-3.5 backdrop-blur-xl sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link href="/welcome" className="flex min-w-0 items-center gap-2.5">
             <span
               aria-hidden
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-ink"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-accent text-sm font-bold text-accent-ink shadow-[0_2px_10px_-2px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
             >
               G
             </span>
@@ -86,13 +101,13 @@ export default function WelcomePage() {
             <Link
               href="/store/main-store"
               target="_blank"
-              className="hidden rounded-xl border border-line px-3.5 py-2 text-sm text-text-dim transition hover:border-accent hover:text-accent sm:inline-flex"
+              className="hidden rounded-2xl border border-line px-3.5 py-2 text-sm text-text-dim transition hover:border-accent hover:text-accent sm:inline-flex"
             >
               Demo store
             </Link>
             <Link
               href="/login"
-              className="inline-flex rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+              className="inline-flex rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-accent-ink shadow-[0_4px_14px_-4px_color-mix(in_oklch,var(--accent)_45%,transparent)] transition hover:bg-accent-strong"
             >
               Sign in
             </Link>
@@ -100,40 +115,34 @@ export default function WelcomePage() {
         </div>
       </header>
 
-      {/* Hero — brand, headline, support, CTAs, one visual plane */}
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_70%_20%,var(--glow),transparent_55%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_70%_15%,var(--glow),transparent_55%),radial-gradient(600px_320px_at_10%_80%,var(--glow-warm),transparent_50%)]"
         />
         <div className="relative mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-12 lg:pb-20 lg:pt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-6"
-          >
-            <p className="text-sm font-medium text-accent">
-              Grabber Mobility Solutions
-            </p>
-            <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-text-strong sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+          <motion.div {...hero} className="space-y-6">
+            <h1 className="text-hero-gradient max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[3.4rem] lg:leading-[1.08]">
               GRABBER POS Studio
             </h1>
-            <p className="max-w-md text-base leading-relaxed text-text-dim sm:text-lg">
+            <p className="text-sm font-semibold tracking-wide text-[oklch(78%_0.15_245)]">
+              Grabber Mobility Solutions
+            </p>
+            <p className="max-w-md text-base leading-relaxed text-text-body sm:text-lg">
               One operate-mode OS for counters, kitchens, and back office —
               terminals, inventory, and a synced web storefront.
             </p>
             <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
               <Link
                 href="/login"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-accent px-6 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-accent px-7 text-sm font-semibold text-accent-ink shadow-[0_6px_20px_-4px_color-mix(in_oklch,var(--accent)_55%,transparent)] transition hover:bg-accent-strong hover:shadow-[0_8px_24px_-4px_color-mix(in_oklch,var(--accent)_65%,transparent)] active:scale-[0.98]"
               >
                 Open dashboard
               </Link>
               <Link
                 href="/store/main-store"
                 target="_blank"
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-line px-6 text-sm font-semibold text-text-body transition hover:border-accent hover:text-accent"
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-line bg-surface-2/60 px-7 text-sm font-semibold text-text-strong transition hover:border-[var(--tint-teal)] hover:text-[var(--tint-teal)] active:scale-[0.98]"
               >
                 View live storefront
               </Link>
@@ -141,13 +150,11 @@ export default function WelcomePage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="relative min-h-[16rem] overflow-hidden rounded-2xl border border-line bg-surface-1 lg:min-h-[22rem]"
+            {...heroVisual}
+            className="panel-glass relative min-h-[16rem] overflow-hidden rounded-3xl border border-line lg:min-h-[22rem]"
             aria-hidden
           >
-            <div className="absolute inset-0 bg-[linear-gradient(145deg,oklch(23%_0.018_165)_0%,oklch(15%_0.014_165)_55%,oklch(19%_0.04_155_/_0.35)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(145deg,oklch(96%_0.02_250)_0%,transparent_45%,oklch(95%_0.04_35_/_0.45)_100%)]" />
             <div className="relative flex h-full flex-col p-5 sm:p-6">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <span className="text-sm font-semibold text-text-strong">
@@ -157,20 +164,35 @@ export default function WelcomePage() {
               </div>
               <div className="mt-4 grid flex-1 grid-cols-3 gap-2">
                 {["Milk 1L", "Bread", "Soap", "Rice 5kg", "Oil", "Tea"].map(
-                  (name) => (
-                    <div
-                      key={name}
-                      className="rounded-xl border border-line bg-surface-2/80 p-2.5"
-                    >
-                      <p className="truncate text-[11px] text-text-body">{name}</p>
-                      <p className="mt-1 font-mono text-xs font-medium text-accent">
-                        LKR {(120 + name.length * 17).toFixed(0)}
-                      </p>
-                    </div>
-                  ),
+                  (name, i) => {
+                    const tints = [
+                      "var(--tint-blue)",
+                      "var(--tint-teal)",
+                      "var(--tint-coral)",
+                      "var(--tint-amber)",
+                      "var(--tint-pink)",
+                      "var(--tint-green)",
+                    ];
+                    return (
+                      <div
+                        key={name}
+                        className="rounded-2xl border border-line bg-surface-1-solid/90 p-2.5"
+                      >
+                        <p className="truncate text-[11px] text-text-body">
+                          {name}
+                        </p>
+                        <p
+                          className="mt-1 font-mono text-xs font-medium"
+                          style={{ color: tints[i] }}
+                        >
+                          LKR {(120 + name.length * 17).toFixed(0)}
+                        </p>
+                      </div>
+                    );
+                  },
                 )}
               </div>
-              <div className="mt-4 flex items-center justify-between rounded-xl border border-line bg-surface-2 px-4 py-3">
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-line bg-surface-2 px-4 py-3">
                 <span className="text-sm text-text-dim">Bill total</span>
                 <span className="font-mono text-lg font-semibold text-accent">
                   LKR 2,840.00
@@ -186,10 +208,8 @@ export default function WelcomePage() {
         className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12"
       >
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...fadeUp(reduced, 0)}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.4 }}
           className="max-w-xl space-y-2"
         >
           <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
@@ -201,36 +221,47 @@ export default function WelcomePage() {
           </p>
         </motion.div>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {VERTICALS.map((v, i) => (
+        <motion.div
+          variants={staggerContainer(reduced)}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-20px" }}
+          className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {VERTICALS.map((v) => (
             <motion.div
               key={v.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-20px" }}
-              transition={{ delay: i * 0.04, duration: 0.35 }}
-              className="rounded-2xl border border-line bg-surface-1/90 p-5 transition hover:border-accent/50"
+              variants={staggerItem(reduced)}
+              {...interactiveCard(reduced)}
+              className="panel-glass cursor-default rounded-3xl border border-line p-5 will-change-transform hover:border-[color-mix(in_oklch,var(--accent)_45%,var(--line))] hover:shadow-[0_16px_36px_-14px_color-mix(in_oklch,var(--accent)_35%,transparent)]"
             >
               <span
                 aria-hidden
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-sm font-semibold text-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold transition-transform group-hover:scale-105"
+                style={{
+                  background: `color-mix(in oklch, ${v.tint} 22%, transparent)`,
+                  color: v.tint,
+                  boxShadow: `0 0 0 1px color-mix(in oklch, ${v.tint} 28%, transparent)`,
+                }}
               >
                 {v.mark}
               </span>
               <h3 className="mt-4 font-semibold tracking-tight text-text-strong">
                 {v.title}
               </h3>
-              <p className="mt-1 text-sm leading-relaxed text-text-dim">{v.body}</p>
+              <p className="mt-1 text-sm leading-relaxed text-text-body">
+                {v.body}
+              </p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       <section
         id="storefront"
         className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:px-12"
       >
-        <div className="grid grid-cols-1 items-center gap-10 rounded-2xl border border-line bg-surface-1 p-6 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10">
+        <div className="panel-glass grid grid-cols-1 items-center gap-10 rounded-3xl border border-line p-6 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10">
           <div className="space-y-5">
             <h2 className="text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
               A storefront with every account
@@ -253,13 +284,13 @@ export default function WelcomePage() {
             <Link
               href="/store/main-store"
               target="_blank"
-              className="inline-flex h-11 items-center rounded-xl bg-accent px-5 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+              className="inline-flex h-11 items-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
             >
               Preview tenant website
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-line bg-surface-0 p-5">
+          <div className="rounded-3xl border border-line bg-surface-0 p-5">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <span className="text-sm font-semibold text-text-strong">
                 Grabber Demo Store
@@ -270,15 +301,22 @@ export default function WelcomePage() {
               2,509 products · Islandwide delivery
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-xl border border-line bg-surface-2 p-3">
-                <p className="text-xs text-text-body">Jasmine Bouquet Freshener</p>
+              <div className="rounded-2xl border border-line bg-surface-1-solid p-3">
+                <p className="text-xs text-text-body">
+                  Jasmine Bouquet Freshener
+                </p>
                 <p className="mt-1 font-mono text-sm font-medium text-accent">
                   LKR 300.00
                 </p>
               </div>
-              <div className="rounded-xl border border-line bg-surface-2 p-3">
-                <p className="text-xs text-text-body">Khomba Baby Cologne 100ml</p>
-                <p className="mt-1 font-mono text-sm font-medium text-accent">
+              <div className="rounded-2xl border border-line bg-surface-1-solid p-3">
+                <p className="text-xs text-text-body">
+                  Khomba Baby Cologne 100ml
+                </p>
+                <p
+                  className="mt-1 font-mono text-sm font-medium"
+                  style={{ color: "var(--tint-coral)" }}
+                >
                   LKR 570.00
                 </p>
               </div>
@@ -300,7 +338,7 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-line bg-surface-1 p-6 sm:p-8">
+        <div className="panel-glass mt-8 rounded-3xl border border-line p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="font-medium text-text-body">
               Estimated monthly sales
@@ -321,21 +359,24 @@ export default function WelcomePage() {
           />
 
           <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+            <div className="rounded-2xl border border-line bg-surface-2 p-5 text-center">
               <p className="text-xs text-text-dim">Time saved</p>
               <p className="mt-1 font-mono text-2xl font-semibold text-text-strong">
                 {timeSavedHours}h
               </p>
             </div>
-            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+            <div className="rounded-2xl border border-line bg-surface-2 p-5 text-center">
               <p className="text-xs text-text-dim">Stock loss prevented</p>
               <p className="mt-1 font-mono text-2xl font-semibold text-accent">
                 LKR {stockLossPrevented.toLocaleString("en-LK")}
               </p>
             </div>
-            <div className="rounded-xl border border-line bg-surface-2 p-5 text-center">
+            <div className="rounded-2xl border border-line bg-surface-2 p-5 text-center">
               <p className="text-xs text-text-dim">Extra web revenue</p>
-              <p className="mt-1 font-mono text-2xl font-semibold text-info">
+              <p
+                className="mt-1 font-mono text-2xl font-semibold"
+                style={{ color: "var(--tint-teal)" }}
+              >
                 LKR {extraWebSales.toLocaleString("en-LK")}
               </p>
             </div>
@@ -428,10 +469,10 @@ function PricingCard({
 }) {
   return (
     <div
-      className={`flex flex-col rounded-2xl border p-6 ${
+      className={`panel-glass flex flex-col rounded-3xl border p-6 ${
         featured
-          ? "border-accent bg-surface-1 shadow-[0_0_0_1px_oklch(78%_0.15_155_/_0.25)]"
-          : "border-line bg-surface-1/80"
+          ? "border-accent shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_35%,transparent)]"
+          : "border-line"
       }`}
     >
       <div className="mb-3 min-h-4">
@@ -459,7 +500,7 @@ function PricingCard({
       </ul>
       <Link
         href="/login"
-        className={`mt-6 inline-flex h-11 items-center justify-center rounded-xl text-sm font-semibold transition ${
+        className={`mt-6 inline-flex h-11 items-center justify-center rounded-2xl text-sm font-semibold transition ${
           featured
             ? "bg-accent text-accent-ink hover:bg-accent-strong"
             : "border border-line text-text-body hover:border-accent hover:text-accent"

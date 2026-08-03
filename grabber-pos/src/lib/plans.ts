@@ -54,6 +54,7 @@ export const STARTER_KEYS = [
   "dashboard",
   "reports",
   "settings",
+  "website",
   "alerts",
   // Cashier ops available on every paid plan.
   "register",

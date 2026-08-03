@@ -15,6 +15,10 @@ interface DeliveryOrder {
   driver: string;
   status: string;
   total: number;
+  fulfilment?: string;
+  source?: string;
+  receiptNo?: string | null;
+  note?: string;
 }
 
 const STATUS_TONE: Record<string, string> = {
@@ -100,6 +104,13 @@ export default function DeliveryPage() {
                 <p className="mt-1 truncate text-xs text-text-dim">
                   {o.address || "No address"} {o.phone ? `· ${o.phone}` : ""}
                 </p>
+                {(o.source === "storefront" || o.fulfilment || o.receiptNo) && (
+                  <p className="mt-1 text-[11px] font-medium text-[var(--tint-teal)]">
+                    {o.source === "storefront" ? "Web order" : "Order"}
+                    {o.fulfilment ? ` · ${o.fulfilment}` : ""}
+                    {o.receiptNo ? ` · ${o.receiptNo}` : ""}
+                  </p>
+                )}
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <span className="text-text-dim">
                     {o.driver ? `🛵 ${o.driver}` : "No driver"}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { springSoft } from "@/lib/motion";
 import {
   useCartStore,
   cartTotals,
@@ -86,6 +87,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
 export function BillPanel() {
   const store = useCartStore();
   const totals = cartTotals(store);
+  const reducedMotion = useReducedMotion();
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [customerPaid, setCustomerPaid] = useState("");
   const [splitCash, setSplitCash] = useState("");
@@ -668,7 +670,12 @@ export function BillPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-line bg-surface-1">
+    <motion.div
+      initial={reducedMotion ? false : { opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={reducedMotion ? { duration: 0 } : springSoft}
+      className="panel-glass flex h-full flex-col rounded-3xl border border-line"
+    >
       {trainingMode && (
         <div className="border-b border-warn/30 bg-warn/15 px-4 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-warn">
           TRAINING — sales not stocked / shift skipped
@@ -1111,7 +1118,9 @@ export function BillPanel() {
         )}
 
         <motion.button
-          whileTap={{ scale: store.lines.length ? 0.98 : 1 }}
+          whileTap={
+            reducedMotion || !store.lines.length ? undefined : { scale: 0.98 }
+          }
           disabled={
             pending ||
             store.lines.length === 0 ||
@@ -1119,12 +1128,12 @@ export function BillPanel() {
             (method === "split" && splitSum + 0.01 < chargedTotal)
           }
           onClick={() => void proceed()}
-          className="mt-2 w-full rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition duration-150 hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-2 w-full rounded-2xl bg-accent py-3.5 font-semibold text-accent-ink shadow-[0_4px_14px_-4px_color-mix(in_oklch,var(--accent)_55%,transparent)] transition duration-150 hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           {pending ? "Processing…" : `Proceed · ${formatMoney(chargedTotal)}`}
         </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

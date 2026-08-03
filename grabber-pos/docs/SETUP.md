@@ -32,7 +32,7 @@ supabase link --project-ref <your-ref>
 supabase db push        # applies supabase/migrations/*.sql in order
 ```
 
-Or paste each file in `supabase/migrations/` (0001 → 0004) into the SQL editor,
+Or paste each file in `supabase/migrations/` (0001 → 0007+) into the SQL editor,
 in order.
 
 Migrations:
@@ -43,6 +43,12 @@ Migrations:
 | `0002_functions.sql` | `create_sale`, `receive_purchase`, `adjust_stock`, helpers |
 | `0003_rls.sql` | row-level security policies |
 | `0004_catalog_rpc.sql` | `catalog`, `product_by_barcode`, `inventory_stats` |
+| `0005_app_data.sql` | `app_collections`, stock documents, product images |
+| `0006_app_documents.sql` | `app_documents`, `reseller_licences` view |
+| `0007_storefront.sql` | public storefront + online catalog / order RPCs |
+
+Apply through **0007+** before enabling a live `/store/<slug>` shop — see
+[PRODUCTION.md](PRODUCTION.md).
 
 ### c. Configure env
 

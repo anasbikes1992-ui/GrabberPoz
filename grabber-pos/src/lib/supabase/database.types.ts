@@ -26,6 +26,13 @@ type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Relationships: [];
 };
 
+type OrganizationRow = {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+};
+
 type BranchRow = {
   id: string;
   org_id: string;
@@ -34,7 +41,7 @@ type BranchRow = {
   currency: string;
   is_active: boolean;
   created_at: string;
-}
+};
 
 type ProductRow = {
   id: string;
@@ -112,7 +119,14 @@ type StockDocumentRow = {
 export interface Database {
   public: {
     Tables: {
-      branches: Table<BranchRow>;
+      organizations: Table<
+        OrganizationRow,
+        { name: string; slug: string; id?: string }
+      >;
+      branches: Table<
+        BranchRow,
+        { org_id: string; name: string; code: string; id?: string }
+      >;
       products: Table<
         ProductRow,
         Partial<ProductRow> & { org_id: string; sku: string; name: string }
@@ -131,7 +145,23 @@ export interface Database {
         Partial<StockDocumentRow> & { type: StockDocType }
       >;
     };
-    Views: Record<never, never>;
+    Views: {
+      reseller_licences: {
+        Row: {
+          org_id: string;
+          org_name: string;
+          onboarded_at: string | null;
+          brand: Json | null;
+          plan: string | null;
+          expiry: string | null;
+          branches: number | null;
+          users: number | null;
+          sales_count: number | null;
+          sales_total: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       create_sale: {
         Args: { payload: Record<string, unknown> };

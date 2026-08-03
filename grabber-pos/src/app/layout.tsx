@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const sans = DM_Sans({
-  variable: "--font-geist-sans",
+const sans = Plus_Jakarta_Sans({
+  variable: "--font-app-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
 const mono = JetBrains_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-app-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
@@ -35,7 +35,7 @@ export default function RootLayout({
       lang="en"
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );
 }

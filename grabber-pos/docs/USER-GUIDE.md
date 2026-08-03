@@ -1,7 +1,8 @@
 # GRABBER POS Studio — User Guide
 
-For cashiers, managers and owners. Covers the screens that are live today
-(retail vertical); other verticals appear here as they ship.
+For cashiers, managers and owners. Covers the live web screens — retail POS plus
+the other sale modes and back-office modules below. Plan-gated tiles show a
+**🔒 Upgrade** badge until your licence unlocks them.
 
 ## Signing in
 
@@ -15,13 +16,13 @@ For cashiers, managers and owners. Covers the screens that are live today
 
 The home screen is a grid of tiles, grouped into:
 
-- **Sale modes** — how you sell: **Retail**, **Wholesale**, and (coming) Category,
+- **Sale modes** — how you sell: **Retail**, **Wholesale**, **Category**,
   Restaurant, Delivery, Repair, Vehicle service, Reloads, Rooms, Rent, Hire
-  purchase, Play area. Live tiles open immediately; upcoming ones show a **Soon**
-  badge.
-- **Business** — Products, Inventory, and (coming) Customers, Suppliers,
-  Purchases, Returns, Expenses, Settings.
-- **Insights** — Dashboard, Sales, and (coming) Reports.
+  purchase, Play area, Layaway, Click & collect (and related boards). Unlocked
+  tiles open immediately; locked ones show **🔒 Upgrade**.
+- **Business** — Products, Inventory, Customers, Suppliers, Purchases, Returns,
+  Expenses, Settings, and the other management modules on your plan.
+- **Insights** — Dashboard, Sales, Reports.
 
 The top bar has your **Home** button and **Sign out**. Inside any screen, the
 **←** (back) and **⌂** (home) buttons return you.

@@ -163,6 +163,8 @@ export class LocalRepository implements PosRepository {
       cardAmount = total;
     }
 
+    const saleStatus = input.status ?? "completed";
+
     const sale = await persistSale({
       lines,
       subtotal,
@@ -177,10 +179,22 @@ export class LocalRepository implements PosRepository {
       employee: input.employee?.trim() || null,
       cashReceived,
       change,
-      status: "completed",
+      status: saleStatus,
       cashAmount,
       cardAmount,
     });
+
+    // Pending card sales must NOT hit the register or imply paid inventory movement.
+    if (saleStatus === "pending") {
+      await writeAudit({
+        actor: input.employee?.trim() || "storefront",
+        action: "sale.pending",
+        entity: "sale",
+        entityId: sale.id,
+        detail: "Awaiting gateway webhook",
+      });
+      return sale;
+    }
 
     try {
       const { recordSaleOnShift } = await import("@/lib/server/register-store");

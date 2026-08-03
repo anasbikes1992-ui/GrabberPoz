@@ -25,7 +25,9 @@ Legend: ✅ shipped · 🟡 partial / thin · ⬜ not built · 💡 idea (not co
 | Restaurant modifiers | Prompt on add item |
 | Repository seam | Demo JSON ↔ Supabase without UI forks |
 | Licence enforcement | Server-side block on sell paths |
-| Docs | PRODUCTION, ARCHITECTURE, USER, RESELLER, FEATURE-PLAN, DESIGN, PRODUCT, CREDENTIALS |
+| Docs | PRODUCTION, ARCHITECTURE, USER, RESELLER, GMS-OPERATIONS, CUSTOMER-STOREFRONT, FEATURE-PLAN, DESIGN, PRODUCT, CREDENTIALS |
+| Website CMS + storefront | `/website` themes/banners/SEO/checkout modes; `/store/[slug]` orders → C&C/Delivery; customer accounts |
+| GMS HQ | `/hq` fleet portal (tenants, licences, onboard, tickets stub, docs) |
 
 ---
 
@@ -116,11 +118,22 @@ polish of thin vertical boards — see FEATURE-PLAN §7 P5–P8.
 
 ---
 
-## 4. Last sprint
+## 4. Last sprints
 
 **Sprint E — Catalog depth** ✅  
 - Product variants (SKU options / matrix) ✅  
 - Per-user permission overrides ✅  
+
+**Sprint F — Storefront + GMS HQ** ✅  
+- Tenant Website CMS (`/website`): themes, banners, SEO, social, WA templates, payment/fulfilment toggles ✅  
+- Storefront checkout modes (cash / card / bank transfer × pickup / courier / PickMe / Uber) ✅  
+- Customer email/password + magic link + order history ✅  
+- Web orders → Click & collect / Delivery boards; WhatsApp catalog CSV/JSON + Meta/Google feeds ✅  
+- GMS `/hq` portal (command center, tenants, licences, onboard, tickets stub, docs) ✅  
+- Docs: [GMS-OPERATIONS.md](GMS-OPERATIONS.md), [CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md) ✅  
+
+Still out of scope for this pass (see non-goals): live PickMe/Uber APIs, live card
+capture / PayHere, full Shopify Liquid themes.
 
 ---
 
@@ -128,4 +141,5 @@ polish of thin vertical boards — see FEATURE-PLAN §7 P5–P8.
 
 - Full ERP (GL, fixed assets)  
 - Replacing Shopify for complex DTC  
+- Live PickMe / Uber booking APIs or PayHere production checkout (modes + staff confirm only)  
 - Native Electron shell  

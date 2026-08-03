@@ -59,7 +59,7 @@ One **sale-mode launcher** + **shared billing engine** + **server-authoritative 
 ## Evidence on Hand
 
 - Seed catalog (~2,509 products) in demo data.
-- Docs: `docs/PRODUCTION.md`, `CREDENTIALS.md`, `ARCHITECTURE.md`, `USER-GUIDE.md`, `RESELLER-GUIDE.md`, `FEATURE-PLAN.md`, `PRODUCT-GAP.md`.
+- Docs: `docs/PRODUCTION.md`, `CREDENTIALS.md`, `ARCHITECTURE.md`, `USER-GUIDE.md`, `RESELLER-GUIDE.md`, `GMS-OPERATIONS.md`, `CUSTOMER-STOREFRONT.md`, `FEATURE-PLAN.md`, `PRODUCT-GAP.md`.
 - Do not invent testimonials or live client logos.
 
 ## Product Principles

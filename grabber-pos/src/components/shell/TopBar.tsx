@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { springSoft } from "@/lib/motion";
 
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
@@ -17,6 +20,21 @@ export function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
   const { brand } = useBrand();
+  const reduced = useReducedMotion();
+  const [showHq, setShowHq] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/hq/me")
+      .then((r) => r.json())
+      .then((j) => {
+        if (!cancelled && j.success) setShowHq(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function logout() {
     if (isSupabaseEnabled) {
@@ -31,22 +49,27 @@ export function TopBar() {
   const businessName = brand.businessName || "GRABBER POS";
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface-1/90 px-3 backdrop-blur-md sm:gap-4 sm:px-5">
+    <motion.header
+      initial={reduced ? false : { opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduced ? { duration: 0 } : springSoft}
+      className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface-1/80 px-3 backdrop-blur-xl sm:gap-4 sm:px-5"
+    >
       <Link
         href="/"
-        className="flex min-w-0 items-center gap-2.5 rounded-lg transition duration-150 hover:opacity-90"
+        className="flex min-w-0 items-center gap-2.5 rounded-xl transition duration-150 hover:opacity-90"
       >
         {brand.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={brand.logoUrl}
             alt={`${businessName} logo`}
-            className="h-8 w-8 rounded-lg object-cover"
+            className="h-8 w-8 rounded-xl object-cover"
           />
         ) : (
           <span
             aria-hidden
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-xs font-bold text-accent-ink"
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-xs font-bold text-accent-ink shadow-[0_2px_8px_-2px_color-mix(in_oklch,var(--accent)_50%,transparent)]"
           >
             G
           </span>
@@ -66,7 +89,7 @@ export function TopBar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-xl px-3 py-1.5 text-sm transition duration-150 ${
+                className={`rounded-2xl px-3 py-1.5 text-sm transition duration-150 ${
                   active
                     ? "bg-accent/15 font-medium text-accent"
                     : "text-text-dim hover:bg-surface-2 hover:text-text-strong"
@@ -77,20 +100,28 @@ export function TopBar() {
             );
           })}
         </div>
+        {showHq && (
+          <Link
+            href="/hq"
+            className="rounded-2xl border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent transition duration-150 hover:bg-accent/10"
+          >
+            GMS HQ
+          </Link>
+        )}
         <Link
           href="/help"
-          className="rounded-xl border border-line px-3 py-1.5 text-sm text-text-dim transition duration-150 hover:border-accent hover:text-accent"
+          className="rounded-2xl border border-line px-3 py-1.5 text-sm text-text-dim transition duration-150 hover:border-accent hover:text-accent"
         >
           Help
         </Link>
         <button
           type="button"
           onClick={logout}
-          className="rounded-xl border border-line px-3 py-1.5 text-sm text-text-dim transition duration-150 hover:border-danger/50 hover:text-danger"
+          className="rounded-2xl border border-line px-3 py-1.5 text-sm text-text-dim transition duration-150 hover:border-danger/50 hover:text-danger"
         >
           Sign out
         </button>
       </nav>
-    </header>
+    </motion.header>
   );
 }

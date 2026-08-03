@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { placeStorefrontOrder } from "@/lib/server/storefront-repo";
+import { PAYMENT_MODES, FULFILMENT_MODES } from "@/lib/website";
+import {
+  demoCustomerCookieName,
+  type PublicStoreCustomer,
+} from "@/lib/server/storefront-customers-store";
 
 const orderSchema = z.object({
   customerName: z.string().trim().min(2, "Name is required").max(120),
   customerMobile: z.string().trim().min(7, "A contact number is required").max(40),
-  address: z.string().trim().min(5, "Delivery address is required").max(500),
+  customerEmail: z
+    .string()
+    .max(160)
+    .optional()
+    .transform((v) => (v && v.includes("@") ? v : undefined)),
+  address: z.string().trim().max(500).default(""),
+  pickupNote: z.string().trim().max(300).optional(),
+  paymentMethod: z.enum(PAYMENT_MODES),
+  paymentReference: z.string().trim().max(120).optional(),
+  fulfilment: z.enum(FULFILMENT_MODES),
   clientUuid: z.string().trim().min(8).max(64),
   lines: z
     .array(
@@ -67,10 +81,39 @@ export async function POST(
     return fail(parsed.error.issues[0]?.message ?? "Invalid order", 400);
   }
 
+  const data = parsed.data;
+  const needsAddress = data.fulfilment !== "pickup";
+  if (needsAddress && data.address.trim().length < 5) {
+    return fail("Delivery address is required", 400);
+  }
+  if (
+    data.paymentMethod === "bank_transfer" &&
+    !(data.paymentReference && data.paymentReference.trim().length >= 2)
+  ) {
+    return fail("Enter your bank transfer reference", 400);
+  }
+
+  let customer: PublicStoreCustomer | null = null;
+  const raw = req.cookies.get(demoCustomerCookieName(slug))?.value;
+  if (raw) {
+    try {
+      customer = JSON.parse(raw) as PublicStoreCustomer;
+    } catch {
+      customer = null;
+    }
+  }
+
   try {
     const order = await placeStorefrontOrder(
       { host: req.headers.get("host"), slug },
-      parsed.data,
+      {
+        ...data,
+        customerEmail: data.customerEmail || customer?.email || null,
+        customerId: customer?.id || null,
+        address: data.address,
+        pickupNote: data.pickupNote,
+        paymentReference: data.paymentReference,
+      },
     );
     return NextResponse.json({ success: true, data: order, error: null });
   } catch (error) {

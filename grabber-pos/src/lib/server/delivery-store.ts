@@ -25,6 +25,12 @@ export interface DeliveryOrder {
   driver: string;
   status: DeliveryStatus;
   lines: DeliveryLine[];
+  /** courier | pickme | uber — set for storefront web orders. */
+  fulfilment?: string;
+  note?: string;
+  source?: "manual" | "storefront";
+  saleId?: string | null;
+  receiptNo?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +63,48 @@ export async function createOrder(): Promise<DeliveryOrder> {
     driver: "",
     status: "new",
     lines: [],
+    source: "manual",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  return store.put(order);
+}
+
+/** Create a filled delivery board row from a public storefront checkout. */
+export async function createOrderFromStorefront(input: {
+  customer: string;
+  phone: string;
+  address: string;
+  note?: string;
+  fulfilment?: string;
+  lines: {
+    productId: string;
+    name: string;
+    unitPrice: number;
+    quantity: number;
+  }[];
+  saleId?: string | null;
+  receiptNo?: string | null;
+}): Promise<DeliveryOrder> {
+  const order: DeliveryOrder = {
+    id: "DEL-" + randomUUID().slice(0, 8).toUpperCase(),
+    customer: input.customer.trim(),
+    phone: input.phone.trim(),
+    address: input.address.trim(),
+    driver: "",
+    status: "new",
+    lines: input.lines.map((l) => ({
+      productId: l.productId,
+      name: l.name,
+      unitPrice: l.unitPrice,
+      quantity: l.quantity,
+      sentQty: 0,
+    })),
+    fulfilment: input.fulfilment,
+    note: input.note ?? "",
+    source: "storefront",
+    saleId: input.saleId ?? null,
+    receiptNo: input.receiptNo ?? null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

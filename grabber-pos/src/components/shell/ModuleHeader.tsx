@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
 
 interface ModuleHeaderProps {
   title: string;
@@ -12,22 +14,28 @@ interface ModuleHeaderProps {
 /** Compact header for a module screen: back + home + title, optional actions. */
 export function ModuleHeader({ title, subtitle, actions }: ModuleHeaderProps) {
   const router = useRouter();
+  const reduced = useReducedMotion();
+  const motionProps = fadeUp(reduced, 0);
+
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
+    <motion.div
+      {...motionProps}
+      className="flex flex-wrap items-end justify-between gap-3"
+    >
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
           <button
             type="button"
             onClick={() => router.back()}
             aria-label="Back"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-line text-text-dim transition duration-150 hover:border-accent hover:text-accent"
+            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-line bg-surface-1/60 text-text-dim backdrop-blur-sm transition duration-150 hover:border-accent hover:text-accent"
           >
             ←
           </button>
           <Link
             href="/"
             aria-label="Home"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-line text-text-dim transition duration-150 hover:border-accent hover:text-accent"
+            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-line bg-surface-1/60 text-text-dim backdrop-blur-sm transition duration-150 hover:border-accent hover:text-accent"
           >
             ⌂
           </Link>
@@ -44,6 +52,6 @@ export function ModuleHeader({ title, subtitle, actions }: ModuleHeaderProps) {
       {actions ? (
         <div className="flex flex-wrap items-center gap-2">{actions}</div>
       ) : null}
-    </div>
+    </motion.div>
   );
 }

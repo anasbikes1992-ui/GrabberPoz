@@ -33,6 +33,11 @@ This applies `supabase/migrations/` in order:
 | `0004_catalog_rpc` | Catalog / barcode / inventory read RPCs |
 | `0005_app_data` | `app_collections`, `stock_documents`, product images |
 | `0006_app_documents` | `app_documents`, `reseller_licences` view, consolidation |
+| `0007_storefront` | Public storefront (`storefronts`), `online_visible` / slug / online price on products, SECURITY DEFINER catalog + order RPCs |
+
+Apply **0007+** before enabling a live `/store/<slug>` shop. Website CMS config
+also persists in `app_documents` (`key = 'website'`) — see
+[CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md).
 
 Verify RLS is on before going live:
 
@@ -51,7 +56,9 @@ Set these in the hosting project (Vercel → Settings → Environment Variables)
 |----------|----------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Switches the app out of demo mode |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Browser-safe key |
-| `SUPABASE_SERVICE_ROLE_KEY` | seeding / super-admin | **Server-only.** Never expose to the browser |
+| `SUPABASE_SERVICE_ROLE_KEY` | seeding / HQ / super-admin | **Server-only.** Never expose to the browser. Unlocks cross-org `/hq` roll-ups |
+| `GMS_ADMIN_EMAILS` | GMS HQ | Comma-separated emails allowed into `/hq` (and/or set Auth `app_metadata.role = gms_admin`) |
+| `GMS_ADMIN_USERS` | demo HQ | Demo usernames allowed into `/hq` (defaults to `POS_USER`) |
 | `WHATSAPP_TOKEN` | optional | WhatsApp Cloud API token for invoice sending |
 | `WHATSAPP_PHONE_NUMBER_ID` | optional | Sender number id |
 | `PRINTER_RECEIPT_IP` | optional | ESC/POS receipt + cash-drawer kick |
@@ -88,14 +95,15 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel and mobile build specifics.
 ## Go-live checklist
 
 **Data & access**
-- [ ] All six migrations applied; the RLS query above returns zero rows
+- [ ] Migrations through **0007_storefront** (and any later) applied; the RLS query above returns zero rows
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` set server-side only, never in `NEXT_PUBLIC_*`
 - [ ] `/login` shows the account form, not the demo hint (password login self-disables once Supabase is configured — see Security below)
 - [ ] Point-in-time recovery enabled on the Supabase project
 - [ ] Owner + staff logins created with the right roles
+- [ ] If GMS staff use `/hq`: `GMS_ADMIN_EMAILS` (and/or `gms_admin` metadata) set; empty email list alone does not open HQ to all owners
 
 **Commercials**
-- [ ] Client's plan and licence expiry set in **Super-admin → Licence**
+- [ ] Client's plan and licence expiry set in **Super-admin → Licence** (`/admin`) or via GMS `/hq`
 - [ ] Branding set (business name, logo, accent) — verify the topbar and receipts
 - [ ] Expiry behaviour understood: selling stops, reads keep working (see below)
 
@@ -103,12 +111,14 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel and mobile build specifics.
 - [ ] Catalog imported and spot-checked (prices, barcodes, stock)
 - [ ] Receipt header/footer, tax rate and paper width set in Settings
 - [ ] Printers reachable from the server (receipt + KOT/BOT where used)
+- [ ] If storefront is live: Website CMS configured; test order on Click & collect / Delivery — see [CUSTOMER-STOREFRONT.md](CUSTOMER-STOREFRONT.md)
 - [ ] `npm run build` and `npm test` green on the deploying commit
 - [ ] `/api/health` returns ok from the deployed URL
 
 **Handover**
 - [ ] Staff trained — see [USER-GUIDE.md](USER-GUIDE.md)
 - [ ] Reseller runbook read — see [RESELLER-GUIDE.md](RESELLER-GUIDE.md)
+- [ ] GMS fleet ops read — see [GMS-OPERATIONS.md](GMS-OPERATIONS.md)
 
 ---
 
@@ -150,6 +160,11 @@ another organization's rows.
 **Secrets.** `SUPABASE_SERVICE_ROLE_KEY`, `WHATSAPP_TOKEN` and printer addresses
 are server-only and must never appear under a `NEXT_PUBLIC_` name — that prefix
 inlines the value into the browser bundle. Rotate anything that has been exposed.
+
+**GMS HQ.** `/hq` is for Grabber Mobility Solutions operators only. Gate with
+`GMS_ADMIN_EMAILS` and/or Auth `gms_admin` metadata; keep the service-role key
+off public storefront pages (anonymous catalog uses SECURITY DEFINER RPCs from
+migration 0007). Runbook: [GMS-OPERATIONS.md](GMS-OPERATIONS.md).
 
 ## Operational notes
 

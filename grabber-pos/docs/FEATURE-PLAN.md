@@ -37,7 +37,8 @@ engine specialized per vertical. This is the platform's defining feature.
 | Hire Purchase | Installment sales + schedules | appliances, furniture | ✅ `/hire-purchase` |
 | Play Area | Time-based play sessions billing | kids play centres | ✅ `/play` |
 | Layaway | Deposits & holds | retail | ✅ `/layaway` |
-| Click & collect | Pick list | retail | ✅ `/click-collect` |
+| Click & collect | Pick list (+ web orders) | retail | ✅ `/click-collect` |
+| Public storefront | Online catalog + checkout | retail | ✅ `/store/[slug]` + `/website` |
 | Register / Other Mode | Misc/other sale | any | ⬜ (cash **Register** at `/register` is shift/Z — not this mode) |
 | Digital Mode | Digital-goods sale | any | ⬜ |
 | **Offline Mode** | Bill without internet, sync later | all | 🟡 web SW + offline queue; Flutter offline POS separate |
@@ -110,7 +111,8 @@ Hire Purchase ✅ · Rent 🟡 · Restaurant + KDS ✅ · Reloads ✅.
 
 **Reports & system**
 Dashboard ✅ · Reports ✅ · Alerts ✅ · Audit log ✅ · Settings ✅ · Help & guides ✅ ·
-Customer display ✅ `/display` · Privacy purge ✅ · Super-admin / licensing ✅ ·
+Customer display ✅ `/display` · Privacy purge ✅ · Super-admin / licensing ✅ `/admin` ·
+Website CMS ✅ `/website` · GMS HQ ✅ `/hq` ·
 Drivers & Softwares (downloads hub) ⬜ · Agreement (dedicated screen) 🟡 (licence in admin) ·
 Clear Data (full wipe) ⬜ (PII purge only).
 
@@ -144,13 +146,16 @@ Still optional dedicated tables (if you outgrow collections):
 
 To sell to clients, the platform needs:
 
-- **Tenant provisioning** — self-serve or admin-created org per client. 🟡
-- **White-label** — per-org business name, logo, colors, receipt branding. 🟡 `/admin`
+- **Tenant provisioning** — admin/HQ-created org per client. 🟡
+- **White-label** — per-org business name, logo, colors, receipt branding. ✅ `/admin` + `/hq` tenant brand
 - **Licensing** — plan tiers, feature flags, expiry; server-side sell block. ✅ stub + enforce
-- **Super-admin console** — manage orgs / branding / usage. ✅ `/admin`
-- **Client onboarding** — Excel import + docs. 🟡 (no full wizard yet)
+- **Tenant super-admin** — branding / licence / clients for one workspace. ✅ `/admin`
+- **GMS fleet HQ** — tenants, licence monitor, onboard, tickets stub, docs. ✅ `/hq`
+- **Client onboarding** — wizard + Excel import + docs. 🟡 (wizard present; deepen as needed)
+- **Storefront** — Website CMS + public shop + catalog feeds. ✅ `/website`, `/store/[slug]`
 
-Decision needed — multi-tenant SaaS vs per-client white-label deploys vs both.
+Hybrid model: multi-tenant SaaS **and** per-client white-label deploys — see
+[RESELLER-GUIDE.md](RESELLER-GUIDE.md) and [GMS-OPERATIONS.md](GMS-OPERATIONS.md).
 
 ---
 
@@ -172,14 +177,16 @@ salary, users/roles + permissions UI.
 
 **P5 Verticals** 🟡 — Restaurant/KDS/delivery/reloads/hire/play ✅-ish; repair/service/rooms/rent thin boards; Digital + Register/Other modes still ⬜.
 
-**P6 Reselling** 🟡 — admin branding & licence stub + gating; onboarding wizard / Agreement polish open.
+**P6 Reselling** 🟡 — `/admin` branding & licence + gating; `/hq` fleet portal shipped; onboarding wizard present; Agreement polish open.
+
+**P6b Storefront** ✅ — Website CMS, themed `/store/[slug]`, checkout modes, customer accounts, C&C/Delivery bridge, catalog/feeds export (no live PayHere/courier APIs).
 
 **P7 Settings, notifications, SMS, help** ✅ — settings, alerts, SMS templates, help; dedicated “Drivers & Softwares” hub ⬜.
 
-**P8 Hardening & launch** 🟡 — typecheck/tests/docs present; production cutover awaits real Supabase / WhatsApp / printer credentials ([CREDENTIALS.md](CREDENTIALS.md)).
+**P8 Hardening & launch** 🟡 — typecheck/tests/docs present; production cutover awaits real Supabase / WhatsApp / printer credentials ([CREDENTIALS.md](CREDENTIALS.md)). Include migration **0007+** and `GMS_ADMIN_EMAILS` when enabling storefront + HQ.
 
-**Documentation (parallel):** BUILD / USER / RESELLER / PRODUCTION / DEPLOYMENT /
-FEATURE-PLAN / PRODUCT-GAP / CREDENTIALS — in `docs/`.
+**Documentation (parallel):** USER / RESELLER / GMS-OPERATIONS / CUSTOMER-STOREFRONT /
+PRODUCTION / DEPLOYMENT / FEATURE-PLAN / PRODUCT-GAP / CREDENTIALS — in `docs/`.
 
 ---
 
@@ -194,5 +201,6 @@ FEATURE-PLAN / PRODUCT-GAP / CREDENTIALS — in `docs/`.
 ## 9. Still worth a look (optional, to refine)
 
 Polish thin vertical boards (repair / service / rooms / rent), Digital mode if
-needed, Agreement / Drivers hub, and collection → first-class schema where
-reporting demands it. Not blocking production cutover once credentials are in.
+needed, Agreement / Drivers hub, live payment/courier APIs if required, and
+collection → first-class schema where reporting demands it. Not blocking
+production cutover once credentials are in.

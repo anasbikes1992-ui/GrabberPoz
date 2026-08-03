@@ -19,6 +19,7 @@ interface Draft {
   accentColor: string;
   logoUrl: string;
   applyBranding: boolean;
+  provisionOrg: boolean;
 }
 
 const EMPTY: Draft = {
@@ -29,57 +30,95 @@ const EMPTY: Draft = {
   accentColor: "",
   logoUrl: "",
   applyBranding: false,
+  provisionOrg: false,
 };
 
+export type OnboardWizardMode = "tenant" | "hq";
+
 /** Guided client onboarding: capture the client, set their plan, provision. */
-export function OnboardWizard({ onDone }: { onDone: () => void }) {
+export function OnboardWizard({
+  onDone,
+  mode = "tenant",
+}: {
+  onDone: () => void;
+  /** `hq` posts to `/api/hq/tenants` (GMS fleet). Default keeps `/admin` behaviour. */
+  mode?: OnboardWizardMode;
+}) {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   const canAdvance = step !== 0 || draft.name.trim().length > 0;
+  const fleet = mode === "hq";
 
   async function provision() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/collections/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: draft.name.trim(),
-          contact: draft.contact.trim(),
-          plan: draft.plan,
-          expiry: draft.expiry,
-          status: "active",
-        }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Could not add the client");
-
-      // White-label deployments run one client per instance, so the operator can
-      // apply the new client's branding and licence to this workspace directly.
-      if (draft.applyBranding) {
-        const applied = await fetch("/api/tenant", {
-          method: "PUT",
+      if (fleet) {
+        const res = await fetch("/api/hq/tenants", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            brand: {
-              businessName: draft.name.trim(),
-              logoUrl: draft.logoUrl.trim(),
-              accentColor: draft.accentColor.trim(),
-            },
-            license: { plan: draft.plan, expiry: draft.expiry, extras: [] },
+            name: draft.name.trim(),
+            contact: draft.contact.trim(),
+            plan: draft.plan,
+            expiry: draft.expiry,
+            accentColor: draft.accentColor.trim(),
+            logoUrl: draft.logoUrl.trim(),
+            applyBranding: draft.applyBranding,
+            provisionOrg: draft.provisionOrg,
           }),
         });
-        const appliedJson = await applied.json();
-        if (!appliedJson.success) {
-          throw new Error(appliedJson.error || "Client added, but branding failed");
+        const json = await res.json();
+        if (!json.success) {
+          throw new Error(json.error || "Could not add the client");
+        }
+        setOrgId(json.data?.orgId ?? null);
+      } else {
+        const res = await fetch("/api/collections/clients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: draft.name.trim(),
+            contact: draft.contact.trim(),
+            plan: draft.plan,
+            expiry: draft.expiry,
+            status: "active",
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          throw new Error(json.error || "Could not add the client");
+        }
+
+        // White-label deployments run one client per instance, so the operator can
+        // apply the new client's branding and licence to this workspace directly.
+        if (draft.applyBranding) {
+          const applied = await fetch("/api/tenant", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              brand: {
+                businessName: draft.name.trim(),
+                logoUrl: draft.logoUrl.trim(),
+                accentColor: draft.accentColor.trim(),
+              },
+              license: { plan: draft.plan, expiry: draft.expiry, extras: [] },
+            }),
+          });
+          const appliedJson = await applied.json();
+          if (!appliedJson.success) {
+            throw new Error(
+              appliedJson.error || "Client added, but branding failed",
+            );
+          }
         }
       }
 
@@ -97,6 +136,7 @@ export function OnboardWizard({ onDone }: { onDone: () => void }) {
     setStep(0);
     setDone(false);
     setError(null);
+    setOrgId(null);
   }
 
   if (done) {
@@ -109,12 +149,16 @@ export function OnboardWizard({ onDone }: { onDone: () => void }) {
           {PLAN_NAMES[draft.plan]} plan
           {draft.expiry ? ` · expires ${draft.expiry}` : " · no expiry"}
           {draft.applyBranding ? " · branding applied to this workspace" : ""}
+          {orgId ? ` · org ${orgId}` : ""}
         </p>
         <ol className="mt-4 space-y-1.5 text-sm text-text-dim">
           <li>1. Import their catalog from Products → Import (Excel/CSV).</li>
           <li>2. Set receipt header, tax and printers in Settings.</li>
           <li>3. Create staff logins under Users &amp; admins.</li>
           <li>4. Hand over the owner login and run through the User Guide.</li>
+          {fleet && (
+            <li>5. Track them under HQ → Tenants / Licences.</li>
+          )}
         </ol>
         <button
           onClick={reset}
@@ -238,8 +282,8 @@ export function OnboardWizard({ onDone }: { onDone: () => void }) {
                 <Summary label="Expiry" value={draft.expiry || "Perpetual"} />
               </dl>
 
-              <fieldset className="rounded-xl border border-line p-3">
-                <legend className="sr-only">White-label options</legend>
+              <fieldset className="rounded-xl border border-line p-3 space-y-3">
+                <legend className="sr-only">Provisioning options</legend>
                 <label className="flex items-start gap-2.5">
                   <input
                     type="checkbox"
@@ -257,9 +301,29 @@ export function OnboardWizard({ onDone }: { onDone: () => void }) {
                     </span>
                   </span>
                 </label>
+                {fleet && (
+                  <label className="flex items-start gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={draft.provisionOrg}
+                      onChange={(e) => set("provisionOrg", e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+                    />
+                    <span className="text-sm">
+                      <span className="font-medium text-text-strong">
+                        Create organization (service-role)
+                      </span>
+                      <span className="mt-0.5 block text-xs text-text-dim">
+                        Inserts an org + main branch + tenant licence document when
+                        SUPABASE_SERVICE_ROLE_KEY is configured. Owner login still
+                        needs the seed script or Auth admin.
+                      </span>
+                    </span>
+                  </label>
+                )}
               </fieldset>
 
-              {draft.applyBranding && (
+              {(draft.applyBranding || (fleet && draft.provisionOrg)) && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-1.5 block text-xs font-medium text-text-dim">

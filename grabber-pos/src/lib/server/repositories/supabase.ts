@@ -93,6 +93,12 @@ export class SupabaseRepository implements PosRepository {
   async createSale(input: CreateSaleInput): Promise<Sale> {
     await assertLicenceActive();
 
+    if (input.status === "pending") {
+      throw new Error(
+        "PENDING card sales are not supported on the durable create_sale RPC yet. Use local pending path or complete via webhook after a pending ledger row.",
+      );
+    }
+
     const { data, error } = await this.db.rpc("create_sale", {
       payload: {
         branch_id: this.branchId,

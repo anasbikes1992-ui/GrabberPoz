@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/store/",
-      disallow: ["/api/", "/admin", "/pos", "/login"],
+      disallow: ["/api/", "/admin", "/hq", "/pos", "/login"],
     },
     sitemap: "https://grabber-pos.vercel.app/sitemap.xml",
   };
