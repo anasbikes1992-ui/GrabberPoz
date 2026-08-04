@@ -195,6 +195,7 @@ export default function LoginPage() {
             {isSupabaseEnabled ? "Email" : "Email / username"}
             <input
               id="login-username"
+              type={isSupabaseEnabled ? "email" : "text"}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -217,6 +218,15 @@ export default function LoginPage() {
               className="mt-2 w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-text-strong outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </label>
+
+          <div className="mt-2 text-right">
+            <a
+              href="mailto:support@grabber.lk?subject=Password%20Reset%20/%20Account%20Help"
+              className="text-xs text-text-dim hover:text-accent hover:underline transition"
+            >
+              Forgot password or need help?
+            </a>
+          </div>
 
           {error && (
             <motion.p

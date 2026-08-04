@@ -499,7 +499,7 @@ function PricingCard({
         ))}
       </ul>
       <Link
-        href="/login"
+        href={cta === "Contact sales" ? "mailto:sales@grabber.lk?subject=Enterprise%20Plan%20Inquiry" : "/login"}
         className={`mt-6 inline-flex h-11 items-center justify-center rounded-2xl text-sm font-semibold transition ${
           featured
             ? "bg-accent text-accent-ink hover:bg-accent-strong"
