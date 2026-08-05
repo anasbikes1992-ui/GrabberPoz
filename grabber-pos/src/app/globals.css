@@ -66,6 +66,30 @@
     var(--surface-0);
 }
 
+/* ── Futuristic ambient layer (scoped, additive) ─────────── */
+.fz-grid {
+  background-image:
+    linear-gradient(color-mix(in oklch, var(--accent) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklch, var(--accent) 14%, transparent) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 38%, transparent 78%);
+  mask-image: radial-gradient(120% 100% at 50% 0%, #000 38%, transparent 78%);
+}
+@keyframes fzFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+.fz-float { animation: fzFloat 7s ease-in-out infinite; }
+@keyframes fzScan { 0% { transform: translateY(-140%); } 100% { transform: translateY(1600%); } }
+.fz-scan { animation: fzScan 4.8s ease-in-out infinite; }
+@keyframes fzPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+.fz-live { animation: fzPulse 1.7s ease-in-out infinite; }
+.fz-hud-label {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: color-mix(in oklch, var(--accent) 80%, var(--text));
+}
+@media (prefers-reduced-motion: reduce) {
+  .fz-float, .fz-scan, .fz-live { animation: none !important; }
+}
+
 /* Hero display title — near-white with blue→coral charm gradient */
 .text-hero-gradient {
   background-image: linear-gradient(

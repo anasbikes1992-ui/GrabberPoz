@@ -116,12 +116,18 @@ export default function WelcomePage() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_70%_15%,var(--glow),transparent_55%),radial-gradient(600px_320px_at_10%_80%,var(--glow-warm),transparent_50%)]"
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(900px_420px_at_70%_15%,var(--glow),transparent_55%),radial-gradient(600px_320px_at_10%_80%,var(--glow-warm),transparent_50%)]" />
+          <div className="fz-grid absolute inset-0 opacity-70" />
+          <div className="fz-float absolute -left-16 top-4 h-72 w-72 rounded-full bg-[var(--glow)] blur-3xl" />
+          <div className="fz-float absolute right-0 top-24 h-64 w-64 rounded-full bg-[var(--glow-cool)] blur-3xl" style={{ animationDelay: "1.4s" }} />
+        </div>
         <div className="relative mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-12 lg:pb-20 lg:pt-20">
           <motion.div {...hero} className="space-y-6">
+            <span className="fz-hud-label inline-flex items-center gap-2 rounded-full border border-line bg-surface-1/70 px-3 py-1">
+              <span className="fz-live inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+              Operate OS · Counters · Kitchens · Storefront
+            </span>
             <h1 className="text-hero-gradient max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[3.4rem] lg:leading-[1.08]">
               GRABBER POS Studio
             </h1>
@@ -155,12 +161,19 @@ export default function WelcomePage() {
             aria-hidden
           >
             <div className="absolute inset-0 bg-[linear-gradient(145deg,oklch(96%_0.02_250)_0%,transparent_45%,oklch(95%_0.04_35_/_0.45)_100%)]" />
+            <div
+              aria-hidden
+              className="fz-scan pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-[color-mix(in_oklch,var(--accent)_22%,transparent)] to-transparent"
+            />
             <div className="relative flex h-full flex-col p-5 sm:p-6">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <span className="text-sm font-semibold text-text-strong">
                   Retail terminal
                 </span>
-                <span className="font-mono text-xs text-accent">Live</span>
+                <span className="flex items-center gap-1.5 font-mono text-xs text-accent">
+                  <span className="fz-live inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+                  Live
+                </span>
               </div>
               <div className="mt-4 grid flex-1 grid-cols-3 gap-2">
                 {["Milk 1L", "Bread", "Soap", "Rice 5kg", "Oil", "Tea"].map(
