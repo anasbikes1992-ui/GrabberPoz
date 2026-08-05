@@ -12,15 +12,26 @@ export default function AppLayout({
 }) {
   return (
     <BrandProvider>
-      <div className="flex min-h-screen flex-col">
+      <div className="relative flex min-h-screen flex-col">
+        {/* Futuristic ambient depth behind every app page (grid + aurora glow). */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="fz-grid absolute inset-0 opacity-30" />
+          <div className="fz-float absolute -left-24 top-8 h-80 w-80 rounded-full bg-[var(--glow)] blur-3xl" />
+          <div
+            className="fz-float absolute right-0 top-[38%] h-72 w-72 rounded-full bg-[var(--glow-cool)] blur-3xl"
+            style={{ animationDelay: "1.6s" }}
+          />
+        </div>
         <a href="#main" className="skip-link">
           Skip to main content
         </a>
-        <TopBar />
-        <LicenceBanner />
-        <main id="main" className="flex-1" tabIndex={-1}>
-          <PageTransition>{children}</PageTransition>
-        </main>
+        <div className="relative z-10 flex min-h-screen flex-col">
+          <TopBar />
+          <LicenceBanner />
+          <main id="main" className="flex-1" tabIndex={-1}>
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
         <IdleLock />
         <OfflineSetup />
       </div>
